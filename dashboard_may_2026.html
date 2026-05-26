@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تقرير تحصيلات مايو 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0a0e1a;--bg2:#0f1425;--bg3:#141930;--card:#161c35;--card2:#1c2340;
+  --border:#252d50;--border2:#2e3860;
+  --gold:#c9a84c;--gold2:#e8c97a;--teal:#2dd4bf;--blue:#6366f1;--blue2:#818cf8;
+  --red:#f87171;--green:#4ade80;--orange:#fb923c;--purple:#a78bfa;--pink:#f472b6;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+  --shadow:0 8px 32px rgba(0,0,0,.4);--radius:16px;--radius2:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+.header{background:linear-gradient(135deg,#0d1228,#111827,#0d1228);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.header-inner{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;gap:16px;flex-wrap:wrap}
+.header-brand{display:flex;align-items:center;gap:12px}
+.logo-icon{width:44px;height:44px;background:linear-gradient(135deg,var(--teal),var(--blue));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 16px rgba(45,212,191,.25)}
+.brand-text h1{font-family:'Tajawal',sans-serif;font-size:18px;font-weight:800;color:var(--teal);line-height:1.2}
+.brand-text p{font-size:11px;color:var(--text3)}
+.header-badges{display:flex;gap:10px;flex-wrap:wrap}
+.badge-pill{border-radius:20px;padding:7px 16px;font-size:12px;font-weight:700;border:1px solid}
+.badge-pill.month{background:rgba(45,212,191,.1);border-color:rgba(45,212,191,.3);color:var(--teal)}
+.badge-pill.type{background:rgba(201,168,76,.1);border-color:rgba(201,168,76,.2);color:var(--gold2)}
+
+.nav-tabs{display:flex;padding:0 32px;border-top:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.nav-tabs::-webkit-scrollbar{display:none}
+.tab-btn{padding:11px 18px;background:none;border:none;color:var(--text3);cursor:pointer;font-family:'Cairo',sans-serif;font-size:12px;font-weight:600;white-space:nowrap;border-bottom:3px solid transparent;transition:all .2s}
+.tab-btn:hover{color:var(--text2)}
+.tab-btn.active{color:var(--teal);border-bottom-color:var(--teal);background:linear-gradient(to bottom,transparent,rgba(45,212,191,.04))}
+
+.main{padding:24px 32px;max-width:1700px;margin:0 auto}
+.page{display:none}
+.page.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.sec-title{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.sec-title .dot{width:4px;height:26px;background:linear-gradient(to bottom,var(--teal),var(--blue));border-radius:2px}
+.sec-title h2{font-family:'Tajawal',sans-serif;font-size:17px;font-weight:700}
+.sec-title .sub{font-size:11px;color:var(--text3);margin-right:6px}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.kpi:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.kpi::before{content:'';position:absolute;top:0;right:0;width:70px;height:70px;border-radius:0 16px 0 100%;opacity:.06}
+.kpi.gold::before{background:var(--gold)}.kpi.teal::before{background:var(--teal)}
+.kpi.blue::before{background:var(--blue)}.kpi.green::before{background:var(--green)}
+.kpi.red::before{background:var(--red)}.kpi.orange::before{background:var(--orange)}
+.kpi.purple::before{background:var(--purple)}.kpi.pink::before{background:var(--pink)}
+.kpi-ic{font-size:19px;margin-bottom:9px;display:block}
+.kpi-lb{font-size:9.5px;color:var(--text3);font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.kpi-val{font-family:'Tajawal',sans-serif;font-size:19px;font-weight:800;line-height:1.1}
+.kpi.gold .kpi-val{color:var(--gold2)}.kpi.teal .kpi-val{color:var(--teal)}
+.kpi.blue .kpi-val{color:var(--blue2)}.kpi.green .kpi-val{color:var(--green)}
+.kpi.red .kpi-val{color:var(--red)}.kpi.orange .kpi-val{color:var(--orange)}
+.kpi.purple .kpi-val{color:var(--purple)}.kpi.pink .kpi-val{color:var(--pink)}
+.kpi-sub{font-size:9.5px;color:var(--text3);margin-top:3px;line-height:1.4}
+
+/* UNPAID */
+.unpaid-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.unpaid-card{background:linear-gradient(135deg,rgba(248,113,113,.08),rgba(251,146,60,.05));border:1px solid rgba(248,113,113,.2);border-radius:var(--radius2);padding:16px;position:relative;overflow:hidden}
+.unpaid-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--red),var(--orange))}
+.up-port{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px}
+.up-count{font-family:'Tajawal',sans-serif;font-size:26px;font-weight:900;color:var(--red);line-height:1}
+.up-label{font-size:9.5px;color:var(--text3);margin-bottom:6px}
+.up-val{font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;color:var(--orange)}
+.up-val-label{font-size:9px;color:var(--text3)}
+
+/* PROGRESS RING */
+.ring-wrap{display:flex;align-items:center;justify-content:center;gap:20px;padding:10px 0}
+.ring-svg{transform:rotate(-90deg)}
+.ring-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.ring-container{position:relative;display:inline-flex;align-items:center;justify-content:center}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:20px}
+.g65{display:grid;grid-template-columns:1.5fr 1fr;gap:18px;margin-bottom:20px}
+
+/* CARD */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;overflow:hidden}
+.card-t{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.bdg{font-size:9.5px;background:rgba(45,212,191,.1);color:var(--teal);border:1px solid rgba(45,212,191,.2);border-radius:20px;padding:2px 7px}
+.cw{position:relative;height:210px}
+.cw-sm{position:relative;height:185px}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:11.5px}
+.tbl th{background:var(--bg3);color:var(--text3);font-weight:700;font-size:9.5px;text-transform:uppercase;padding:9px 11px;text-align:right;border-bottom:1px solid var(--border2)}
+.tbl td{padding:9px 11px;border-bottom:1px solid rgba(37,45,80,.4);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(255,255,255,.02)}
+.tbl .tr-total td{background:rgba(45,212,191,.05);border-top:1px solid rgba(45,212,191,.2);font-weight:700;color:var(--teal)}
+.n{font-family:'Tajawal',sans-serif;font-weight:700}
+.n.t{color:var(--gold2)}.n.p{color:var(--orange)}.n.m{color:var(--teal)}.n.a{color:var(--purple)}.n.s{color:var(--blue2)}
+
+/* INSIGHTS */
+.ins-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:11px;margin-bottom:20px}
+.ins{background:var(--card);border:1px solid var(--border);border-radius:var(--radius2);padding:14px;border-right:4px solid}
+.ins.info{border-right-color:var(--teal)}.ins.warn{border-right-color:var(--orange)}
+.ins.good{border-right-color:var(--green)}.ins.bad{border-right-color:var(--red)}
+.ins-ic{font-size:17px;margin-bottom:5px}
+.ins-t{font-size:11.5px;font-weight:700;color:var(--text2);margin-bottom:4px}
+.ins-tx{font-size:11px;color:var(--text3);line-height:1.65}
+.ins-tx strong{color:var(--text)}
+
+.ts{overflow-x:auto}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+@media(max-width:900px){.g2,.g3,.g65{grid-template-columns:1fr}.main{padding:14px}.kpi-grid{grid-template-columns:repeat(2,1fr)}.unpaid-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-brand">
+      <div class="logo-icon">📅</div>
+      <div class="brand-text">
+        <h1>تقرير تحصيلات مايو 2026</h1>
+        <p>تحليل تفصيلي للتحصيلات خلال شهر مايو</p>
+      </div>
+    </div>
+    <div class="header-badges">
+      <div class="badge-pill month">📅 مايو 2026</div>
+      <div class="badge-pill type">🏢 6 محافظ عقارية</div>
+    </div>
+  </div>
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="showPage('overview')">📊 الملخص التنفيذي</button>
+    <button class="tab-btn" onclick="showPage('p1')">🏪 القرين</button>
+    <button class="tab-btn" onclick="showPage('p2')">🏬 العقيلة</button>
+    <button class="tab-btn" onclick="showPage('p3')">🏪 العارضية</button>
+    <button class="tab-btn" onclick="showPage('p4')">🏠 السكني</button>
+    <button class="tab-btn" onclick="showPage('p5')">🏗️ التجاري</button>
+    <button class="tab-btn" onclick="showPage('p8')">🔑 الخاص</button>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ======= OVERVIEW ======= -->
+<div class="page active" id="page-overview">
+
+  <!-- KPIs التحصيل -->
+  <div class="sec-title"><div class="dot"></div><h2>التحصيلات</h2><span class="sub">تاريخ التحصيل خلال مايو 2026</span></div>
+  <div class="kpi-grid">
+    <div class="kpi gold"><span class="kpi-ic">💰</span><div class="kpi-lb">إجمالي التحصيل الفعلي</div><div class="kpi-val">3.44M</div><div class="kpi-sub">نقدي + شيكات + أونلاين + كي نت</div></div>
+    <div class="kpi teal"><span class="kpi-ic">🔵</span><div class="kpi-lb">إجمالي الإعفاءات</div><div class="kpi-val">312,558</div><div class="kpi-sub">إعفاء (308,185) + قانوني (4,373)</div></div>
+    <div class="kpi purple"><span class="kpi-ic">⚖️</span><div class="kpi-lb">الإعفاء القانوني</div><div class="kpi-val">4,374</div><div class="kpi-sub">100% عن استحقاق مايو 2026</div></div>
+    <div class="kpi orange"><span class="kpi-ic">📊</span><div class="kpi-lb">نسبة الإعفاء للتحصيل</div><div class="kpi-val">9.08%</div><div class="kpi-sub">إجمالي الإعفاء ÷ التحصيل الفعلي</div></div>
+    <div class="kpi blue"><span class="kpi-ic">📑</span><div class="kpi-lb">شيكات مؤجلة</div><div class="kpi-val">157,853</div><div class="kpi-sub">منها 91% متأخرات قبل مايو</div></div>
+    <div class="kpi pink"><span class="kpi-ic">🛡️</span><div class="kpi-lb">تأمين محصل</div><div class="kpi-val">69,544</div><div class="kpi-sub">إجمالي دفعات التأمين في مايو</div></div>
+  </div>
+
+  <!-- KPIs عدم الدفع -->
+  <div class="sec-title"><div class="dot"></div><h2>العقود التي لم تسدد مايو</h2><span class="sub">عدد أشهر التأخير = 1 | معتمد + ساري أو منتهي</span></div>
+  <div class="kpi-grid">
+    <div class="kpi red"><span class="kpi-ic">🚨</span><div class="kpi-lb">إجمالي العقود غير المسددة</div><div class="kpi-val">808</div><div class="kpi-sub">ساري + منتهي + مغلق في مايو</div></div>
+    <div class="kpi orange"><span class="kpi-ic">💸</span><div class="kpi-lb">قيمة الإيجارات غير المحصلة</div><div class="kpi-val">1,239,874</div><div class="kpi-sub">دك — مستحقات مايو غير مدفوعة</div></div>
+    <div class="kpi green"><span class="kpi-ic">✅</span><div class="kpi-lb">نسبة التحصيل من الاستحقاق</div><div class="kpi-val">58.1%</div><div class="kpi-sub">تحصيل مايو 2.32M من مستحق 4.0M دك</div></div>
+    <div class="kpi blue"><span class="kpi-ic">📋</span><div class="kpi-lb">العقود المستحق عليها مايو</div><div class="kpi-val">2,023</div><div class="kpi-sub">إجمالي المستحق الشهري: 4.0M دك</div></div>
+  </div>
+
+  <!-- توزيع غير المسددين حسب المحفظة -->
+  <div class="sec-title"><div class="dot"></div><h2>توزيع العقود غير المسددة لمايو</h2></div>
+  <div class="unpaid-grid">
+    <div class="unpaid-card">
+      <div class="up-port">🏪 أسواق القرين</div>
+      <div class="up-count">192</div>
+      <div class="up-label">عقد لم يسدد</div>
+      <div class="up-val">327,264 دك</div>
+      <div class="up-val-label">قيمة الإيجارات غير المحصلة</div>
+    </div>
+    <div class="unpaid-card">
+      <div class="up-port">🏬 مجمعات العقيلة</div>
+      <div class="up-count">347</div>
+      <div class="up-label">عقد لم يسدد</div>
+      <div class="up-val">537,887 دك</div>
+      <div class="up-val-label">قيمة الإيجارات غير المحصلة</div>
+    </div>
+    <div class="unpaid-card">
+      <div class="up-port">🏪 أسواق العارضية</div>
+      <div class="up-count">196</div>
+      <div class="up-label">عقد لم يسدد</div>
+      <div class="up-val">215,389 دك</div>
+      <div class="up-val-label">قيمة الإيجارات غير المحصلة</div>
+    </div>
+    <div class="unpaid-card">
+      <div class="up-port">🏠 العقارات السكنية</div>
+      <div class="up-count">35</div>
+      <div class="up-label">عقد لم يسدد</div>
+      <div class="up-val">99,048 دك</div>
+      <div class="up-val-label">قيمة الإيجارات غير المحصلة</div>
+    </div>
+    <div class="unpaid-card">
+      <div class="up-port">🏗️ العقارات التجارية</div>
+      <div class="up-count">28</div>
+      <div class="up-label">عقد لم يسدد</div>
+      <div class="up-val">55,366 دك</div>
+      <div class="up-val-label">قيمة الإيجارات غير المحصلة</div>
+    </div>
+    <div class="unpaid-card">
+      <div class="up-port">🔑 أملاك خاصة</div>
+      <div class="up-count">10</div>
+      <div class="up-label">عقد لم يسدد</div>
+      <div class="up-val">4,920 دك</div>
+      <div class="up-val-label">قيمة الإيجارات غير المحصلة</div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 1 -->
+  <div class="g65">
+    <div class="card">
+      <div class="card-t">التحصيل الفعلي حسب المحفظة <span class="bdg">دك</span></div>
+      <div class="cw"><canvas id="chCollPort"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-t">توزيع التحصيل حسب فترة الاستحقاق</div>
+      <div class="cw"><canvas id="chPeriod"></canvas></div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 2 -->
+  <div class="g2">
+    <div class="card">
+      <div class="card-t">نسبة العقود غير المسددة — عدد <span class="bdg">%</span></div>
+      <div class="cw-sm"><canvas id="chUnpaidPct"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-t">نسبة الإيجارات غير المحصلة — قيمة <span class="bdg">%</span></div>
+      <div class="cw-sm"><canvas id="chUnpaidValPct"></canvas></div>
+    </div>
+  </div>
+
+  <!-- جدول ملخص -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-t">ملخص طرق التحصيل — جميع المحافظ — مايو 2026 <span class="bdg">دك</span></div>
+    <div class="ts">
+      <table class="tbl">
+        <thead><tr><th>نوع / طريقة الدفع</th><th>الإجمالي</th><th>متأخرات قبل مايو</th><th>استحقاق مايو</th><th>مقدم</th></tr></thead>
+        <tbody>
+          <tr><td>✅ التحصيل الفعلي</td><td><span class="n t">3,438,734</span></td><td><span class="n p">848,800</span></td><td><span class="n m">2,324,173</span></td><td><span class="n a">265,761</span></td></tr>
+          <tr><td>🔵 إعفاء</td><td><span class="n t">308,185</span></td><td><span class="n p">210,110</span></td><td><span class="n m">98,075</span></td><td><span class="n a">0</span></td></tr>
+          <tr><td>🔷 إعفاء إداري</td><td><span class="n t">13,016</span></td><td><span class="n p">4,254</span></td><td><span class="n m">8,762</span></td><td><span class="n a">0</span></td></tr>
+          <tr><td>⚖️ إعفاء قانوني</td><td><span class="n t">4,374</span></td><td><span class="n p">0</span></td><td><span class="n m">4,374</span></td><td><span class="n a">0</span></td></tr>
+          <tr><td>📑 شيكات مؤجلة</td><td><span class="n t">157,853</span></td><td><span class="n p">142,923</span></td><td><span class="n m">14,930</span></td><td><span class="n a">0</span></td></tr>
+          <tr><td>🔄 تحويل تأمين لإيجار</td><td colspan="4"><span class="n s">18,626</span></td></tr>
+          <tr><td>⚖️ ايداعات بالمحكمة</td><td colspan="4"><span class="n s">1,170</span></td></tr>
+          <tr><td>🛡️ تأمين محصل</td><td colspan="4"><span class="n" style="color:var(--purple)">69,544</span></td></tr>
+          <tr class="tr-total"><td><strong>📊 المجموع الكلي</strong></td><td><span class="n">4,010,502</span></td><td><span class="n">1,206,087</span></td><td><span class="n">2,450,314</span></td><td><span class="n">265,761</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Insights -->
+  <div class="sec-title"><div class="dot"></div><h2>رؤى تحليلية — مايو 2026</h2></div>
+  <div class="ins-grid">
+    <div class="ins info">
+      <div class="ins-ic">📈</div>
+      <div class="ins-t">58.1% نسبة تحصيل استحقاق مايو</div>
+      <div class="ins-tx">التحصيل الفعلي عن <strong>استحقاق مايو تحديداً</strong> بلغ <strong>2.32M دك</strong> من إجمالي مستحق <strong>4.0M دك</strong>، أي نسبة تحصيل <strong>58.1%</strong>.</div>
+    </div>
+    <div class="ins bad">
+      <div class="ins-ic">🚨</div>
+      <div class="ins-t">808 عقداً لم يسددوا مايو</div>
+      <div class="ins-tx">يمثلون <strong>38.7%</strong> من إجمالي العقود المستحق عليها مايو (2,088 عقد). العقيلة الأعلى بـ <strong>347 عقداً</strong> (42.9% من غير المسددين) بقيمة <strong>537,887 دك</strong>.</div>
+    </div>
+    <div class="ins warn">
+      <div class="ins-ic">⚠️</div>
+      <div class="ins-t">نسبة إعفاء مرتفعة في مايو</div>
+      <div class="ins-tx">نسبة الإعفاء للتحصيل في مايو <strong>9.08%</strong> مقارنة بـ <strong>5.26%</strong> في الفترة الكاملة (يناير—مايو) — تحتاج مراجعة أسباب الارتفاع في هذا الشهر.</div>
+    </div>
+    <div class="ins good">
+      <div class="ins-ic">✅</div>
+      <div class="ins-t">التجاري: أفضل أداء مالي</div>
+      <div class="ins-tx">أقل نسبة قيمة غير محصلة بين المحافظ: <strong>21.8%</strong> فقط من إجمالي مستحق التجاري (55,366 من 253,429 دك). رغم أن نسبة العدد مرتفعة (43.1%)، إلا أن قيمة العقود الغير مسددة منخفضة — مؤشر إيجابي مالياً.</div>
+    </div>
+    <div class="ins info">
+      <div class="ins-ic">📑</div>
+      <div class="ins-t">91% من الشيكات المؤجلة متأخرات</div>
+      <div class="ins-tx">من <strong>157,853 دك</strong> شيكات مؤجلة في مايو، <strong>142,923 دك</strong> (91%) عن متأخرات قبل مايو — مؤشر على تراكم شيكات قديمة.</div>
+    </div>
+  </div>
+
+</div><!-- /overview -->
+
+<!-- PORTFOLIO PAGES -->
+<div class="page" id="page-p1"></div>
+<div class="page" id="page-p2"></div>
+<div class="page" id="page-p3"></div>
+<div class="page" id="page-p4"></div>
+<div class="page" id="page-p5"></div>
+<div class="page" id="page-p8"></div>
+
+</div>
+
+<script>
+const DATA = {
+  collections: {
+    "أسواق القرين":    {real:{total:719151.2,pre:207943.4,may:510842.8,adv:365.0},exemption:{total:161650.0,pre:142559.5,may:19090.5,adv:0},admin:{total:3090.0,pre:2317.5,may:772.5,adv:0},legal:{total:770.0,pre:0,may:770.0,adv:0},checks:{total:38938.0,pre:38938.0,may:0,adv:0},ins_tr:14786.65,court:1170.0,settle:0,ins_col:15680.5},
+    "مجمعات العقيلة": {real:{total:1525396.14,pre:241864.75,may:1055070.89,adv:228460.5},exemption:{total:69068.55,pre:10168.0,may:58900.55,adv:0},admin:{total:1936.5,pre:1936.5,may:0,adv:0},legal:{total:602.5,pre:0,may:602.5,adv:0},checks:{total:118915.25,pre:103984.75,may:14930.5,adv:0},ins_tr:0,court:0,settle:0,ins_col:43723.25},
+    "أسواق العارضية": {real:{total:538808.0,pre:79261.25,may:447671.75,adv:11875.0},exemption:{total:14754.25,pre:9933.0,may:4821.25,adv:0},admin:{total:7989.0,pre:0,may:7989.0,adv:0},legal:{total:3001.0,pre:0,may:3001.0,adv:0},checks:{total:0,pre:0,may:0,adv:0},ins_tr:3839.0,court:0,settle:0,ins_col:8790.0},
+    "العقارات السكنية":{real:{total:434770.5,pre:248439.0,may:185231.5,adv:1100.0},exemption:{total:50254.15,pre:44593.15,may:5661.0,adv:0},admin:{total:0,pre:0,may:0,adv:0},legal:{total:0,pre:0,may:0,adv:0},checks:{total:0,pre:0,may:0,adv:0},ins_tr:0,court:0,settle:0,ins_col:1350.0},
+    "العقارات التجارية":{real:{total:200513.37,pre:67186.87,may:109366.5,adv:23960.0},exemption:{total:11658.0,pre:2306.5,may:9351.5,adv:0},admin:{total:0,pre:0,may:0,adv:0},legal:{total:0,pre:0,may:0,adv:0},checks:{total:0,pre:0,may:0,adv:0},ins_tr:0,court:0,settle:0,ins_col:0},
+    "أملاك خاصة":     {real:{total:20095.0,pre:4105.0,may:15990.0,adv:0},exemption:{total:800.0,pre:550.0,may:250.0,adv:0},admin:{total:0,pre:0,may:0,adv:0},legal:{total:0,pre:0,may:0,adv:0},checks:{total:0,pre:0,may:0,adv:0},ins_tr:0,court:0,settle:0,ins_col:0}
+  },
+  unpaid: {
+    "أسواق القرين":    {count:192, value:327264.3},
+    "مجمعات العقيلة": {count:347, value:537887.42},
+    "أسواق العارضية": {count:196, value:215388.5},
+    "العقارات السكنية":{count:35,  value:99047.83},
+    "العقارات التجارية":{count:28, value:55365.8},
+    "أملاك خاصة":     {count:10,  value:4920.0}
+  },
+  ports:["أسواق القرين","مجمعات العقيلة","أسواق العارضية","العقارات السكنية","العقارات التجارية","أملاك خاصة"],
+  shorts:["القرين","العقيلة","العارضية","السكني","التجاري","الخاص"],
+  pages:{"أسواق القرين":"p1","مجمعات العقيلة":"p2","أسواق العارضية":"p3","العقارات السكنية":"p4","العقارات التجارية":"p5","أملاك خاصة":"p8"}
+};
+
+const C={gold:'#c9a84c',teal:'#2dd4bf',blue:'#6366f1',green:'#4ade80',red:'#f87171',orange:'#fb923c',purple:'#a78bfa',blue2:'#818cf8',pink:'#f472b6'};
+const PAL=[C.gold,C.teal,C.blue2,C.green,C.orange,C.purple];
+const BS={x:{ticks:{color:'#64748b',font:{family:'Cairo',size:10}},grid:{color:'rgba(37,45,80,.5)'}},y:{ticks:{color:'#64748b',font:{family:'Cairo',size:10}},grid:{color:'rgba(37,45,80,.5)'}}};
+const BO={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8',font:{family:'Cairo',size:11}}}}};
+
+function fmt(n){if(!n&&n!==0)return'—';const a=Math.abs(n);if(a>=1e6)return(n/1e6).toFixed(2)+'M';if(a>=1e3)return(n/1e3).toFixed(1)+'K';return Math.round(n).toLocaleString('ar')}
+function fmtF(n){if(!n&&n!==0)return'—';return Math.round(n).toLocaleString('ar')}
+
+Chart.register({id:'topLbls',afterDatasetsDraw(chart){
+  const{ctx,config}=chart;
+  if(config.type==='doughnut'||config.type==='pie')return;
+  const isH=config.options&&config.options.indexAxis==='y';
+  chart.data.datasets.forEach((ds,di)=>{
+    const meta=chart.getDatasetMeta(di);if(meta.hidden)return;
+    meta.data.forEach((bar,i)=>{
+      const v=ds.data[i];if(!v||v===0)return;
+      const lb=Math.abs(v)>=1e6?(v/1e6).toFixed(1)+'M':Math.abs(v)>=1e3?(v/1e3).toFixed(0)+'K':Math.round(v).toLocaleString();
+      ctx.save();ctx.font='bold 9.5px Cairo';ctx.fillStyle='#94a3b8';
+      if(isH){ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(lb,bar.x+5,bar.y);}
+      else{ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(lb,bar.x,bar.y-4);}
+      ctx.restore();
+    });
+  });
+}});
+
+function initOverview(){
+  const P=DATA.ports,S=DATA.shorts;
+
+  new Chart(document.getElementById('chCollPort'),{
+    type:'bar',
+    data:{labels:S,datasets:[{data:P.map(p=>DATA.collections[p].real.total),backgroundColor:PAL.map(c=>c+'99'),borderColor:PAL,borderWidth:2,borderRadius:6}]},
+    options:{...BO,plugins:{...BO.plugins,legend:{display:false}},scales:{...BS,y:{...BS.y,ticks:{callback:v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v,color:'#64748b',font:{family:'Cairo',size:10}}}}}
+  });
+
+  const pre=P.reduce((s,p)=>s+DATA.collections[p].real.pre,0);
+  const may=P.reduce((s,p)=>s+DATA.collections[p].real.may,0);
+  const adv=P.reduce((s,p)=>s+DATA.collections[p].real.adv,0);
+  const gt=pre+may+adv;
+  new Chart(document.getElementById('chPeriod'),{
+    type:'doughnut',
+    data:{
+      labels:[`متأخرات قبل مايو (${(pre/gt*100).toFixed(1)}%)`,`استحقاق مايو (${(may/gt*100).toFixed(1)}%)`,`مقدم (${(adv/gt*100).toFixed(1)}%)`],
+      datasets:[{data:[pre,may,adv],backgroundColor:[C.orange+'cc',C.teal+'cc',C.purple+'cc'],borderColor:[C.orange,C.teal,C.purple],borderWidth:2}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{family:'Cairo',size:10},padding:8}},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)+' دك'}}}}
+  });
+
+  // شارت نسبة عدم السداد - مرتب من الأعلى للأقل
+  const unpaidPctData = [
+    {label:'العقيلة',  pct:44.9, unpaid:347, total:772,  color:'#f87171'},
+    {label:'التجاري',  pct:43.1, unpaid:28,  total:65,   color:'#fb923c'},
+    {label:'القرين',   pct:39.0, unpaid:192, total:492,  color:'#fbbf24'},
+    {label:'الخاص',    pct:38.5, unpaid:10,  total:26,   color:'#a78bfa'},
+    {label:'العارضية', pct:34.6, unpaid:196, total:566,  color:'#34d399'},
+    {label:'السكني',   pct:34.3, unpaid:35,  total:102,  color:'#2dd4bf'},
+  ];
+  new Chart(document.getElementById('chUnpaidPct'),{
+    type:'bar',
+    data:{
+      labels:unpaidPctData.map(d=>d.label),
+      datasets:[{
+        label:'نسبة عدم السداد %',
+        data:unpaidPctData.map(d=>d.pct),
+        backgroundColor:unpaidPctData.map(d=>d.color+'cc'),
+        borderColor:unpaidPctData.map(d=>d.color),
+        borderWidth:2,borderRadius:8
+      }]
+    },
+    options:{...BO,
+      plugins:{...BO.plugins,
+        legend:{display:false},
+        tooltip:{callbacks:{
+          label:ctx=>{
+            const d=unpaidPctData[ctx.dataIndex];
+            return [` نسبة عدم السداد: ${d.pct}%`, ` غير مسدد: ${d.unpaid} من ${d.total} عقد`];
+          }
+        }}
+      },
+      scales:{
+        x:{...BS.x,ticks:{color:'#94a3b8',font:{family:'Cairo',size:11}}},
+        y:{...BS.y,
+          min:0,max:55,
+          ticks:{callback:v=>v+'%',color:'#64748b',font:{family:'Cairo',size:10}},
+          grid:{color:'rgba(37,45,80,.5)'}
+        }
+      }
+    }
+  });
+
+
+  // شارت نسبة القيمة
+  const unpaidValPctData = [
+    {label:'العقيلة',  pct:31.7, color:'#f87171'},
+    {label:'العارضية', pct:32.0, color:'#34d399'},
+    {label:'السكني',   pct:34.4, color:'#2dd4bf'},
+    {label:'القرين',   pct:30.7, color:'#fbbf24'},
+    {label:'التجاري',  pct:21.8, color:'#fb923c'},
+    {label:'الخاص',    pct:20.8, color:'#a78bfa'},
+  ].sort((a,b)=>b.pct-a.pct);
+  new Chart(document.getElementById('chUnpaidValPct'),{
+    type:'bar',
+    data:{
+      labels:unpaidValPctData.map(d=>d.label),
+      datasets:[{
+        label:'نسبة القيمة غير المحصلة %',
+        data:unpaidValPctData.map(d=>d.pct),
+        backgroundColor:unpaidValPctData.map(d=>d.color+'cc'),
+        borderColor:unpaidValPctData.map(d=>d.color),
+        borderWidth:2,borderRadius:8
+      }]
+    },
+    options:{...BO,
+      plugins:{...BO.plugins,
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>{
+          const d=unpaidValPctData[ctx.dataIndex];
+          return ` نسبة القيمة غير المحصلة: ${d.pct}%`;
+        }}}
+      },
+      scales:{
+        x:{...BS.x,ticks:{color:'#94a3b8',font:{family:'Cairo',size:11}}},
+        y:{...BS.y,min:0,max:45,
+          ticks:{callback:v=>v+'%',color:'#64748b',font:{family:'Cairo',size:10}},
+          grid:{color:'rgba(37,45,80,.5)'}
+        }
+      }
+    }
+  });
+}
+
+function buildPort(pname){
+  const pid=DATA.pages[pname];
+  const el=document.getElementById('page-'+pid);
+  if(el.dataset.built)return;el.dataset.built='1';
+  const col=DATA.collections[pname];
+  const unp=DATA.unpaid[pname];
+  const totalUnpaid=Object.values(DATA.unpaid).reduce((s,v)=>s+v.value,0);
+  const unpPct=(unp.value/totalUnpaid*100).toFixed(1);
+  const totalExempt=col.exemption.total+col.legal.total;
+  const exemPct=col.real.total>0?(totalExempt/col.real.total*100).toFixed(1):0;
+
+  el.innerHTML=`
+  <!-- التحصيل -->
+  <div class="sec-title"><div class="dot"></div><h2>التحصيلات</h2><span class="sub">تاريخ التحصيل خلال مايو 2026</span></div>
+  <div class="kpi-grid">
+    <div class="kpi gold"><span class="kpi-ic">💰</span><div class="kpi-lb">التحصيل الفعلي</div><div class="kpi-val">${fmt(col.real.total)}</div><div class="kpi-sub">نقدي + شيكات + أونلاين + كي نت</div></div>
+    <div class="kpi teal"><span class="kpi-ic">🔵</span><div class="kpi-lb">إجمالي الإعفاءات</div><div class="kpi-val">${fmt(totalExempt)}</div><div class="kpi-sub">إعفاء ${fmt(col.exemption.total)} | قانوني ${fmt(col.legal.total)}</div></div>
+    <div class="kpi purple"><span class="kpi-ic">⚖️</span><div class="kpi-lb">الإعفاء القانوني</div><div class="kpi-val">${fmt(col.legal.total)}</div><div class="kpi-sub">مايو: ${fmt(col.legal.may)} | متأخرات: ${fmt(col.legal.pre)}</div></div>
+    <div class="kpi orange"><span class="kpi-ic">📊</span><div class="kpi-lb">نسبة الإعفاء للتحصيل</div><div class="kpi-val">${exemPct}%</div><div class="kpi-sub">إجمالي الإعفاء ÷ التحصيل الفعلي</div></div>
+    <div class="kpi blue"><span class="kpi-ic">📑</span><div class="kpi-lb">شيكات مؤجلة</div><div class="kpi-val">${fmt(col.checks.total)}</div><div class="kpi-sub">متأخرات: ${fmt(col.checks.pre)}</div></div>
+    <div class="kpi pink"><span class="kpi-ic">🛡️</span><div class="kpi-lb">تأمين محصل</div><div class="kpi-val">${fmt(col.ins_col)}</div><div class="kpi-sub">دفعات التأمين في مايو</div></div>
+  </div>
+
+  <!-- عدم الدفع -->
+  <div class="sec-title"><div class="dot"></div><h2>العقود التي لم تسدد مايو</h2></div>
+  <div class="kpi-grid">
+    <div class="kpi red"><span class="kpi-ic">🚨</span><div class="kpi-lb">عدد العقود غير المسددة</div><div class="kpi-val">${unp.count}</div><div class="kpi-sub">ساري + منتهي + مغلق في مايو</div></div>
+    <div class="kpi orange"><span class="kpi-ic">💸</span><div class="kpi-lb">قيمة غير المحصل</div><div class="kpi-val">${fmt(unp.value)}</div><div class="kpi-sub">${unpPct}% من إجمالي غير المحصل الكلي</div></div>
+  </div>
+
+  <!-- جدول -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-t">تحليل طرق التحصيل التفصيلي <span class="bdg">دك</span></div>
+    <div class="ts"><table class="tbl">
+      <thead><tr><th>نوع / طريقة الدفع</th><th>الإجمالي</th><th>متأخرات قبل مايو</th><th>استحقاق مايو</th><th>مقدم</th></tr></thead>
+      <tbody>
+        <tr><td>✅ تحصيل فعلي</td><td><span class="n t">${fmtF(col.real.total)}</span></td><td><span class="n p">${fmtF(col.real.pre)}</span></td><td><span class="n m">${fmtF(col.real.may)}</span></td><td><span class="n a">${fmtF(col.real.adv)}</span></td></tr>
+        <tr><td>🔵 إعفاء</td><td><span class="n t">${fmtF(col.exemption.total)}</span></td><td><span class="n p">${fmtF(col.exemption.pre)}</span></td><td><span class="n m">${fmtF(col.exemption.may)}</span></td><td><span class="n a">${fmtF(col.exemption.adv)}</span></td></tr>
+        <tr><td>🔷 إعفاء إداري</td><td><span class="n t">${fmtF(col.admin.total)}</span></td><td><span class="n p">${fmtF(col.admin.pre)}</span></td><td><span class="n m">${fmtF(col.admin.may)}</span></td><td><span class="n a">${fmtF(col.admin.adv)}</span></td></tr>
+        <tr><td>⚖️ إعفاء قانوني</td><td><span class="n t">${fmtF(col.legal.total)}</span></td><td><span class="n p">${fmtF(col.legal.pre)}</span></td><td><span class="n m">${fmtF(col.legal.may)}</span></td><td><span class="n a">${fmtF(col.legal.adv)}</span></td></tr>
+        <tr><td>📑 شيكات مؤجلة</td><td><span class="n t">${fmtF(col.checks.total)}</span></td><td><span class="n p">${fmtF(col.checks.pre)}</span></td><td><span class="n m">${fmtF(col.checks.may)}</span></td><td><span class="n a">${fmtF(col.checks.adv)}</span></td></tr>
+        ${col.ins_tr>0?`<tr><td>🔄 تحويل تأمين لإيجار</td><td colspan="4"><span class="n s">${fmtF(col.ins_tr)}</span></td></tr>`:''}
+        ${col.court>0?`<tr><td>⚖️ ايداعات بالمحكمة</td><td colspan="4"><span class="n s">${fmtF(col.court)}</span></td></tr>`:''}
+        <tr><td>🛡️ تأمين محصل</td><td colspan="4"><span class="n" style="color:var(--purple)">${fmtF(col.ins_col)}</span></td></tr>
+        <tr class="tr-total">
+          <td><strong>📊 المجموع الكلي</strong></td>
+          <td><span class="n">${fmtF(col.real.total+col.exemption.total+col.admin.total+col.legal.total+col.checks.total+col.ins_tr+col.court+col.ins_col)}</span></td>
+          <td><span class="n">${fmtF(col.real.pre+col.exemption.pre+col.admin.pre+col.legal.pre+col.checks.pre)}</span></td>
+          <td><span class="n">${fmtF(col.real.may+col.exemption.may+col.admin.may+col.legal.may+col.checks.may)}</span></td>
+          <td><span class="n">${fmtF(col.real.adv+col.exemption.adv+col.admin.adv+col.legal.adv+col.checks.adv)}</span></td>
+        </tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="g2">
+    <div class="card">
+      <div class="card-t">توزيع التحصيل حسب فترة الاستحقاق</div>
+      <div class="cw-sm"><canvas id="ch_${pid}_period"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-t">مقارنة طرق التحصيل</div>
+      <div class="cw-sm"><canvas id="ch_${pid}_methods"></canvas></div>
+    </div>
+  </div>`;
+
+  setTimeout(()=>{
+    const pre2=col.real.pre,may2=col.real.may,adv2=col.real.adv,gt2=pre2+may2+adv2;
+    new Chart(document.getElementById('ch_'+pid+'_period'),{
+      type:'doughnut',
+      data:{labels:[`متأخرات قبل مايو (${gt2>0?(pre2/gt2*100).toFixed(1):0}%)`,`استحقاق مايو (${gt2>0?(may2/gt2*100).toFixed(1):0}%)`,`مقدم (${gt2>0?(adv2/gt2*100).toFixed(1):0}%)`],
+        datasets:[{data:[pre2,may2,adv2],backgroundColor:[C.orange+'cc',C.teal+'cc',C.purple+'cc'],borderColor:[C.orange,C.teal,C.purple],borderWidth:2}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{family:'Cairo',size:10},padding:7}},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)+' دك'}}}}
+    });
+    const mL=['تحصيل فعلي','إعفاء','إعفاء قانوني','شيكات مؤجلة','تأمين'];
+    const mV=[col.real.total,col.exemption.total,col.legal.total,col.checks.total,col.ins_col];
+    const mC=[C.gold,C.teal,C.purple,C.orange,C.pink];
+    const filtered=mL.map((l,i)=>({l,v:mV[i],c:mC[i]})).filter(x=>x.v>0);
+    new Chart(document.getElementById('ch_'+pid+'_methods'),{
+      type:'bar',data:{labels:filtered.map(x=>x.l),datasets:[{data:filtered.map(x=>x.v),backgroundColor:filtered.map(x=>x.c+'bb'),borderColor:filtered.map(x=>x.c),borderWidth:1.5,borderRadius:5}]},
+      options:{...BO,indexAxis:'y',plugins:{...BO.plugins,legend:{display:false}},
+        scales:{x:{...BS.x,ticks:{callback:v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v,color:'#64748b',font:{family:'Cairo',size:9}},grid:{color:'rgba(37,45,80,.4)'}},y:{...BS.y,ticks:{color:'#94a3b8',font:{family:'Cairo',size:10}},grid:{display:false}}}}
+    });
+  },100);
+}
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const order=['overview','p1','p2','p3','p4','p5','p8'];
+  document.querySelectorAll('.tab-btn')[order.indexOf(id)]?.classList.add('active');
+  const pm={p1:'أسواق القرين',p2:'مجمعات العقيلة',p3:'أسواق العارضية',p4:'العقارات السكنية',p5:'العقارات التجارية',p8:'أملاك خاصة'};
+  if(pm[id])buildPort(pm[id]);
+}
+
+window.addEventListener('DOMContentLoaded',()=>setTimeout(initOverview,200));
+</script>
+</body>
+</html>
