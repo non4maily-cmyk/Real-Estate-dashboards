@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة التحليل العقاري</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0a0e1a;--bg2:#0f1425;--bg3:#141930;--card:#161c35;--card2:#1c2340;
+  --border:#252d50;--border2:#2e3860;
+  --gold:#c9a84c;--gold2:#e8c97a;--teal:#2dd4bf;--blue:#6366f1;--blue2:#818cf8;
+  --red:#f87171;--green:#4ade80;--orange:#fb923c;--purple:#a78bfa;--pink:#f472b6;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+  --shadow:0 8px 32px rgba(0,0,0,.4);--radius:16px;--radius2:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+.header{background:linear-gradient(135deg,#0d1228,#111827,#0d1228);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.header-inner{display:flex;align-items:center;justify-content:space-between;padding:12px 28px;gap:16px}
+.header-brand{display:flex;align-items:center;gap:12px}
+.logo-icon{width:42px;height:42px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 4px 16px rgba(201,168,76,.3)}
+.brand-text h1{font-family:'Tajawal',sans-serif;font-size:17px;font-weight:800;color:var(--gold2)}
+.brand-text p{font-size:11px;color:var(--text3)}
+.header-period{background:linear-gradient(135deg,rgba(201,168,76,.1),rgba(201,168,76,.05));border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:7px 14px;text-align:center}
+.header-period .pl{font-size:10px;color:var(--text3)}
+.header-period .pv{font-size:12px;font-weight:700;color:var(--gold2)}
+.nav-tabs{display:flex;padding:0 28px;border-top:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.nav-tabs::-webkit-scrollbar{display:none}
+.tab-btn{padding:11px 18px;background:none;border:none;color:var(--text3);cursor:pointer;font-family:'Cairo',sans-serif;font-size:12px;font-weight:600;white-space:nowrap;border-bottom:3px solid transparent;transition:all .2s}
+.tab-btn:hover{color:var(--text2)}
+.tab-btn.active{color:var(--gold2);border-bottom-color:var(--gold);background:linear-gradient(to bottom,transparent,rgba(201,168,76,.04))}
+
+.main{padding:24px 28px;max-width:1700px;margin:0 auto}
+.page{display:none}
+.page.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.sec-title{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.sec-title .dot{width:4px;height:26px;background:linear-gradient(to bottom,var(--gold),var(--teal));border-radius:2px}
+.sec-title h2{font-family:'Tajawal',sans-serif;font-size:17px;font-weight:700}
+.sec-title .sub{font-size:11px;color:var(--text3);margin-right:6px}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:default}
+.kpi:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.kpi::before{content:'';position:absolute;top:0;right:0;width:70px;height:70px;border-radius:0 16px 0 100%;opacity:.06}
+.kpi.gold::before{background:var(--gold)}.kpi.teal::before{background:var(--teal)}
+.kpi.blue::before{background:var(--blue)}.kpi.green::before{background:var(--green)}
+.kpi.red::before{background:var(--red)}.kpi.orange::before{background:var(--orange)}
+.kpi.purple::before{background:var(--purple)}.kpi.pink::before{background:var(--pink)}
+.kpi.gray::before{background:var(--text3)}
+.kpi-ic{font-size:19px;margin-bottom:9px;display:block}
+.kpi-lb{font-size:9.5px;color:var(--text3);font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.kpi-val{font-family:'Tajawal',sans-serif;font-size:19px;font-weight:800;line-height:1.1}
+.kpi.gold .kpi-val{color:var(--gold2)}.kpi.teal .kpi-val{color:var(--teal)}
+.kpi.blue .kpi-val{color:var(--blue2)}.kpi.green .kpi-val{color:var(--green)}
+.kpi.red .kpi-val{color:var(--red)}.kpi.orange .kpi-val{color:var(--orange)}
+.kpi.purple .kpi-val{color:var(--purple)}.kpi.pink .kpi-val{color:var(--pink)}
+.kpi.gray .kpi-val{color:var(--text2)}
+.kpi-sub{font-size:9.5px;color:var(--text3);margin-top:3px;line-height:1.4}
+
+/* MOVEMENT */
+.move-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:11px;margin-bottom:20px}
+.mv{background:var(--card);border:1px solid var(--border);border-radius:var(--radius2);padding:14px;text-align:center;position:relative;overflow:hidden}
+.mv::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px}
+.mv.new-c::after{background:linear-gradient(90deg,var(--teal),var(--blue))}
+.mv.ev::after{background:linear-gradient(90deg,var(--orange),var(--red))}
+.mv.evl::after{background:linear-gradient(90deg,var(--red),#dc2626)}
+.mv.inc::after{background:linear-gradient(90deg,var(--green),var(--teal))}
+.mv.dec::after{background:linear-gradient(90deg,var(--orange),var(--red))}
+.mv.netp::after{background:linear-gradient(90deg,var(--green),var(--teal))}
+.mv.netn::after{background:linear-gradient(90deg,var(--red),var(--orange))}
+.mv-ic{font-size:22px;margin-bottom:5px}
+.mv-lb{font-size:10px;color:var(--text3);font-weight:600;margin-bottom:4px}
+.mv-val{font-family:'Tajawal',sans-serif;font-size:20px;font-weight:900;line-height:1;margin-bottom:2px}
+.mv.new-c .mv-val{color:var(--teal)}.mv.ev .mv-val{color:var(--orange)}
+.mv.evl .mv-val{color:var(--red)}.mv.inc .mv-val{color:var(--green)}
+.mv.dec .mv-val{color:var(--orange)}
+.mv-sub{font-size:9.5px;color:var(--text3)}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:20px}
+.g65{display:grid;grid-template-columns:1.5fr 1fr;gap:18px;margin-bottom:20px}
+
+/* CARD */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;overflow:hidden}
+.card-t{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.badge{font-size:9.5px;background:rgba(201,168,76,.1);color:var(--gold2);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:2px 7px}
+.cw{position:relative;height:210px}
+.cw-sm{position:relative;height:180px}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:11.5px}
+.tbl th{background:var(--bg3);color:var(--text3);font-weight:700;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;padding:9px 11px;text-align:right;border-bottom:1px solid var(--border2)}
+.tbl td{padding:9px 11px;border-bottom:1px solid rgba(37,45,80,.4);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(255,255,255,.02)}
+.tbl .tr-total td{background:rgba(201,168,76,.05);border-top:1px solid rgba(201,168,76,.2);font-weight:700;color:var(--gold2)}
+.n{font-family:'Tajawal',sans-serif;font-weight:700}
+.n.t{color:var(--gold2)}.n.p{color:var(--orange)}.n.c{color:var(--teal)}.n.a{color:var(--purple)}.n.s{color:var(--blue2)}
+
+/* DEBT */
+.dp{width:100%;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:4px}
+.dpf{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--red),var(--orange))}
+
+/* INSIGHTS */
+.ins-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:11px;margin-bottom:20px}
+.ins{background:var(--card);border:1px solid var(--border);border-radius:var(--radius2);padding:14px;border-right:4px solid}
+.ins.info{border-right-color:var(--teal)}.ins.warn{border-right-color:var(--orange)}
+.ins.good{border-right-color:var(--green)}.ins.bad{border-right-color:var(--red)}
+.ins-ic{font-size:17px;margin-bottom:5px}
+.ins-t{font-size:11.5px;font-weight:700;color:var(--text2);margin-bottom:4px}
+.ins-tx{font-size:11px;color:var(--text3);line-height:1.65}
+.ins-tx strong{color:var(--text)}
+
+.ts{overflow-x:auto}
+.ts::-webkit-scrollbar{height:3px}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+@media(max-width:1200px){.move-grid{grid-template-columns:repeat(3,1fr)}.g65{grid-template-columns:1fr}}
+@media(max-width:900px){.g2,.g3{grid-template-columns:1fr}.move-grid{grid-template-columns:repeat(2,1fr)}.main{padding:14px}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-brand">
+      <div class="logo-icon">🏢</div>
+      <div class="brand-text">
+        <h1>لوحة التحليل العقاري</h1>
+        <p>تحليل شامل للتحصيلات وحركة العقود</p>
+      </div>
+    </div>
+    <div class="header-period">
+      <div class="pl">الفترة المالية</div>
+      <div class="pv">1 يناير — 24 مايو 2026</div>
+    </div>
+  </div>
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="showPage('overview')">📊 الملخص التنفيذي</button>
+    <button class="tab-btn" onclick="showPage('p1')">🏪 القرين</button>
+    <button class="tab-btn" onclick="showPage('p2')">🏬 العقيلة</button>
+    <button class="tab-btn" onclick="showPage('p3')">🏪 العارضية</button>
+    <button class="tab-btn" onclick="showPage('p4')">🏠 السكني</button>
+    <button class="tab-btn" onclick="showPage('p5')">🏗️ التجاري</button>
+    <button class="tab-btn" onclick="showPage('p8')">🔑 الخاص</button>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ======= OVERVIEW ======= -->
+<div class="page active" id="page-overview">
+
+  <!-- التحصيلات -->
+  <div class="sec-title"><div class="dot"></div><h2>التحصيلات</h2><span class="sub">من 1 يناير حتى 24 مايو 2026</span></div>
+  <div class="kpi-grid">
+    <div class="kpi gold"><span class="kpi-ic">💰</span><div class="kpi-lb">إجمالي التحصيل الفعلي</div><div class="kpi-val">15.80M</div><div class="kpi-sub">نقدي + شيكات + أونلاين + كي نت</div></div>
+    <div class="kpi teal"><span class="kpi-ic">🔵</span><div class="kpi-lb">إجمالي الإعفاءات</div><div class="kpi-val">830,975</div><div class="kpi-sub">إعفاء (808,115) + قانوني (22,860)</div></div>
+    <div class="kpi purple"><span class="kpi-ic">⚖️</span><div class="kpi-lb">الإعفاء القانوني</div><div class="kpi-val">22,860</div><div class="kpi-sub">متأخرات: 3,934 | حالي: 18,927</div></div>
+    <div class="kpi orange"><span class="kpi-ic">📊</span><div class="kpi-lb">نسبة الإعفاء للتحصيل</div><div class="kpi-val">5.26%</div><div class="kpi-sub">إجمالي الإعفاء ÷ التحصيل الفعلي</div></div>
+    <div class="kpi blue"><span class="kpi-ic">📑</span><div class="kpi-lb">شيكات مؤجلة</div><div class="kpi-val">396,642</div><div class="kpi-sub">إجمالي الشيكات المؤجلة</div></div>
+    <div class="kpi pink"><span class="kpi-ic">🛡️</span><div class="kpi-lb">تأمين محصل</div><div class="kpi-val">244,369</div><div class="kpi-sub">إجمالي دفعات التأمين المحصلة</div></div>
+  </div>
+
+  <!-- العقود -->
+  <div class="sec-title"><div class="dot"></div><h2>العقود</h2><span class="sub">حالة المحفظة العقارية</span></div>
+  <div class="kpi-grid">
+    <div class="kpi green"><span class="kpi-ic">📋</span><div class="kpi-lb">العقود السارية — عدد</div><div class="kpi-val">1,944</div><div class="kpi-sub">شامل عقود الشقق السكنية المتجددة</div></div>
+    <div class="kpi green"><span class="kpi-ic">💵</span><div class="kpi-lb">العقود السارية — قيمة شهرية</div><div class="kpi-val">3.93M</div><div class="kpi-sub">إجمالي الإيجارات الشهرية السارية</div></div>
+    <div class="kpi gray"><span class="kpi-ic">📁</span><div class="kpi-lb">العقود المنتهية — عدد</div><div class="kpi-val">144</div><div class="kpi-sub">في مرحلة تفاوض على التجديد</div></div>
+    <div class="kpi gray"><span class="kpi-ic">💼</span><div class="kpi-lb">العقود المنتهية — قيمة</div><div class="kpi-val">226,773</div><div class="kpi-sub">قيمة إيجار العقود المنتهية</div></div>
+    <div class="kpi orange"><span class="kpi-ic">⚠️</span><div class="kpi-lb">ذمم العقود السارية والمنتهية</div><div class="kpi-val">4.77M</div><div class="kpi-sub">إجمالي الاستحقاقات المعلقة الحالية</div></div>
+    <div class="kpi red"><span class="kpi-ic">📌</span><div class="kpi-lb">لم يسدد عن استحقاقات 2026</div><div class="kpi-val">1,306,974</div><div class="kpi-sub">إجمالي الغير مسدد يناير — مايو 2026</div></div>
+    <div class="kpi red"><span class="kpi-ic">❌</span><div class="kpi-lb">عقود غير معتمدة</div><div class="kpi-val">19</div><div class="kpi-sub">قيمة: 19,597 دك — تحتاج اعتماد</div></div>
+    <div class="kpi red"><span class="kpi-ic">⚖️</span><div class="kpi-lb">عقود محولة للقانونية — عدد</div><div class="kpi-val">482</div><div class="kpi-sub">23.1% من إجمالي العقود السارية والمنتهية</div></div>
+    <div class="kpi red"><span class="kpi-ic">💰</span><div class="kpi-lb">عقود محولة للقانونية — قيمة</div><div class="kpi-val">807,728</div><div class="kpi-sub">إجمالي قيمة إيجارات العقود القانونية</div></div>
+  </div>
+
+  <!-- حركة العقود -->
+  <div class="sec-title"><div class="dot"></div><h2>حركة العقود في 2026</h2></div>
+  <div class="move-grid">
+    <div class="mv new-c">
+      <div class="mv-ic">📝</div><div class="mv-lb">عقود جديدة</div>
+      <div class="mv-val">114</div>
+      <div class="mv-sub">قيمة: 169,424 دك</div>
+    </div>
+    <div class="mv ev">
+      <div class="mv-ic">🚪</div><div class="mv-lb">إخلاء غير قانوني</div>
+      <div class="mv-val">117</div>
+      <div class="mv-sub">قيمة: 183,135 دك</div>
+    </div>
+    <div class="mv evl">
+      <div class="mv-ic">⚖️</div><div class="mv-lb">إخلاء قانوني</div>
+      <div class="mv-val">32</div>
+      <div class="mv-sub">قيمة: 51,540 دك</div>
+    </div>
+    <div class="mv inc">
+      <div class="mv-ic">📈</div><div class="mv-lb">زيادة في الإيجار</div>
+      <div class="mv-val">121</div>
+      <div class="mv-sub">+ 77,047 دك</div>
+    </div>
+    <div class="mv dec">
+      <div class="mv-ic">📉</div><div class="mv-lb">انخفاض في الإيجار</div>
+      <div class="mv-val">19</div>
+      <div class="mv-sub">- 43,356 دك</div>
+    </div>
+    <div class="mv netn" id="overviewNetCard">
+      <div class="mv-ic" id="overviewNetIc">📉</div>
+      <div class="mv-lb">صافي حركة القيمة</div>
+      <div class="mv-val" id="overviewNetVal" style="color:var(--red)">-31,560 دك</div>
+      <div class="mv-sub">جديد − إخلاء + زيادة − انخفاض</div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 1 -->
+  <div class="g65">
+    <div class="card">
+      <div class="card-t">التحصيل الفعلي حسب المحفظة <span class="badge">دك</span></div>
+      <div class="cw"><canvas id="chCollPort"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-t">توزيع التحصيل حسب الفترة الزمنية</div>
+      <div class="cw"><canvas id="chCollPeriod"></canvas></div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 2 -->
+  <div class="g2">
+    <div class="card">
+      <div class="card-t">حركة العقود بين الجديد والإخلاء <span class="badge">2026</span></div>
+      <div class="cw-sm"><canvas id="chMovement"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-t">لم يسدد عن استحقاقات 2026 حسب المحفظة <span class="badge">دك</span></div>
+      <div class="cw-sm"><canvas id="chDebt"></canvas></div>
+    </div>
+  </div>
+
+  <!-- توزيع التأخر -->
+  <div class="g2">
+    <div class="card">
+      <div class="card-t">توزيع التأخر بالأشهر — إجمالي المحافظ</div>
+      <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0" id="overviewDelayBars"></div>
+    </div>
+    <div class="card">
+      <div class="card-t">مقارنة طرق التحصيل — إجمالي</div>
+      <div class="cw-sm"><canvas id="chMethods"></canvas></div>
+    </div>
+  </div>
+
+  <!-- جدول -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-t">ملخص طرق التحصيل — جميع المحافظ <span class="badge">دك</span></div>
+    <div class="ts">
+      <table class="tbl">
+        <thead><tr><th>نوع / طريقة الدفع</th><th>الإجمالي</th><th>متأخرات قبل 2026</th><th>يناير—مايو 2026</th><th>مقدم</th></tr></thead>
+        <tbody>
+          <tr><td>✅ التحصيل الفعلي</td><td><span class="n t">15,800,269</span></td><td><span class="n p">705,375</span></td><td><span class="n c">14,665,935</span></td><td><span class="n a">428,959</span></td></tr>
+          <tr><td>🔵 إعفاء</td><td><span class="n t">808,115</span></td><td><span class="n p">168,083</span></td><td><span class="n c">640,032</span></td><td><span class="n a">0</span></td></tr>
+          <tr><td>🔷 إعفاء إداري</td><td><span class="n t">279,800</span></td><td><span class="n p">1,260</span></td><td><span class="n c">278,540</span></td><td><span class="n a">0</span></td></tr>
+          <tr><td>⚖️ إعفاء قانوني</td><td><span class="n t">22,860</span></td><td><span class="n p">2,467</span></td><td><span class="n c">20,394</span></td><td><span class="n a">0</span></td></tr>
+          <tr><td>📑 شيكات مؤجلة</td><td><span class="n t">396,642</span></td><td><span class="n p">116,274</span></td><td><span class="n c">278,868</span></td><td><span class="n a">1,500</span></td></tr>
+          <tr><td>🔄 تحويل تأمين لإيجار</td><td colspan="4"><span class="n s">68,572</span></td></tr>
+          <tr><td>⚖️ ايداعات بالمحكمة لم تحصل</td><td colspan="4"><span class="n s">6,454</span></td></tr>
+          <tr><td>🤝 تسويات</td><td colspan="4"><span class="n s">3,000</span></td></tr>
+          <tr><td>🛡️ تأمين محصل</td><td colspan="4"><span class="n" style="color:var(--purple)">244,369</span></td></tr>
+          <tr class="tr-total"><td><strong>📊 المجموع الكلي</strong></td><td><span class="n">17,624,627</span></td><td><span class="n">993,459</span></td><td><span class="n">15,883,769</span></td><td><span class="n">430,459</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Insights -->
+  <div class="sec-title"><div class="dot"></div><h2>رؤى تحليلية</h2></div>
+  <div class="ins-grid">
+    <div class="ins info"><div class="ins-ic">📈</div><div class="ins-t">أداء تحصيلي قوي</div><div class="ins-tx"><strong>92.8%</strong> من التحصيل الفعلي يغطي الفترة الحالية، مؤشر صحي على انتظام الدفع. تحصيل المتأخرات شكّل <strong>4.5%</strong> فقط.</div></div>
+    <div class="ins warn"><div class="ins-ic">⚠️</div><div class="ins-t">الإعفاءات تستحق المراجعة</div><div class="ins-tx">إجمالي الإعفاء والقانوني <strong>830,975 دك</strong> أي <strong>5.26%</strong> من التحصيل. القرين الأعلى بـ <strong>278,778 دك</strong>.</div></div>
+    <div class="ins bad"><div class="ins-ic">🚨</div><div class="ins-t">فجوة في حركة العقود</div><div class="ins-tx">إجمالي الإخلاء (<strong>149</strong> وحدة) يفوق العقود الجديدة (<strong>114</strong>) بفارق <strong>35 وحدة</strong>. الصافي <strong>-31,560 دك</strong>.</div></div>
+    <div class="ins good"><div class="ins-ic">💹</div><div class="ins-t">التجديدات تدعم الإيرادات</div><div class="ins-tx">صافي الزيادة في إيجارات المجددة <strong>+33,691 دك</strong>. <strong>121 عقد</strong> ارتفع إيجاره مقابل <strong>19</strong> فقط انخفض.</div></div>
+    <div class="ins warn"><div class="ins-ic">🕐</div><div class="ins-t">القرين والعقيلة: أعلى مديونية</div><div class="ins-tx">القرين يحمل <strong>25.4%</strong> (332K دك) والعقيلة <strong>44.7%</strong> (584K دك) من إجمالي لم يُسدد عن استحقاقات 2026 البالغ <strong>1,306,974 دك</strong>. يستدعيان خطة تحصيل مكثفة.</div></div>
+    <div class="ins warn"><div class="ins-ic">📑</div><div class="ins-t">شيكات مؤجلة تحت المراقبة</div><div class="ins-tx"><strong>396,642 دك</strong> شيكات مؤجلة، <strong>29%</strong> منها (116K) متأخرات قبل 2026. العقيلة تمثل <strong>73%</strong> منها وتستوجب متابعة مستمرة.</div></div>
+  </div>
+
+</div><!-- /overview -->
+
+<!-- ======= PORTFOLIO PAGES ======= -->
+<div class="page" id="page-p1"></div>
+<div class="page" id="page-p2"></div>
+<div class="page" id="page-p3"></div>
+<div class="page" id="page-p4"></div>
+<div class="page" id="page-p5"></div>
+<div class="page" id="page-p8"></div>
+
+</div>
+
+<script>
+// ===== DATA =====
+const DATA = {
+  collections: {
+    "أسواق القرين":    {exemption:{total:267607.61,pre:126264.5,curr:141343.1,adv:0.01},real:{total:3696275.61,pre:165485.21,curr:3480035.4,adv:50755.0},admin:{total:160043.1,pre:810.0,curr:159233.1,adv:0.0},legal:{total:11170.0,pre:0.0,curr:11170.0,adv:0.0},checks:{total:84640.99,pre:53560.99,curr:31080.0,adv:0.0},ins_tr:47058.25,court:6454.0,settle:3000.0,ins_col:41366.0},
+    "مجمعات العقيلة": {exemption:{total:352317.6,pre:39518.0,curr:312799.6,adv:0.0},real:{total:6660558.39,pre:209122.65,curr:6170548.74,adv:280887.0},admin:{total:7185.5,pre:0.0,curr:7185.5,adv:0.0},legal:{total:1649.0,pre:1046.5,curr:602.5,adv:0.0},checks:{total:291060.6,pre:57602.85,curr:233457.75,adv:0.0},ins_tr:3259.5,court:0,settle:0,ins_col:146178.5},
+    "أسواق العارضية": {exemption:{total:26717.38,pre:1310.0,curr:25407.38,adv:0.0},real:{total:2881364.98,pre:136537.0,curr:2714562.98,adv:30265.0},admin:{total:16246.0,pre:0.0,curr:16246.0,adv:0.0},legal:{total:10041.0,pre:1420.0,curr:8621.0,adv:0.0},checks:{total:20940.0,pre:5110.0,curr:14330.0,adv:1500.0},ins_tr:11754.0,court:0,settle:0,ins_col:46772.5},
+    "العقارات السكنية":{exemption:{total:59899.15,pre:300.0,curr:59599.15,adv:0.0},real:{total:1415085.19,pre:165949.5,curr:1243885.69,adv:5250.0},admin:{total:4455.0,pre:450.0,curr:4005.0,adv:0.0},legal:{total:0,pre:0,curr:0,adv:0},checks:{total:0,pre:0,curr:0,adv:0},ins_tr:0,court:0,settle:0,ins_col:5402.0},
+    "العقارات التجارية":{exemption:{total:99348.0,pre:160.0,curr:99188.0,adv:0.0},real:{total:1046046.91,pre:24261.02,curr:959983.89,adv:61802.0},admin:{total:88000.0,pre:0.0,curr:88000.0,adv:0.0},legal:{total:0,pre:0,curr:0,adv:0},checks:{total:0,pre:0,curr:0,adv:0},ins_tr:2950.0,court:0,settle:0,ins_col:1650.0},
+    "أملاك خاصة":     {exemption:{total:2225.3,pre:530.91,curr:1694.38,adv:0.0},real:{total:100938.04,pre:4020.0,curr:96918.04,adv:0.0},admin:{total:3870.85,pre:0.0,curr:3870.85,adv:0.0},legal:{total:0,pre:0,curr:0,adv:0},checks:{total:0,pre:0,curr:0,adv:0},ins_tr:3550.0,court:0,settle:0,ins_col:3000.0}
+  },
+  contracts: {
+    "أسواق القرين":    {active_count:467,active_value:1037781.3,ended_count:41,ended_value:53838.4,evict_count:51,evict_value:74143.7,evict_legal_count:6,evict_legal_value:20149.0,new_count:21,new_value:21148.33,rent_increase:57860.85,rent_increase_count:28,rent_decrease:6201.1,rent_decrease_count:5,debt1:1424492.67,debt2:331944.3,pending:331944.3,other_pending:0.0,delay_dist:{"1":77,"2":27,"3":16,"4":13,"5":13,"more":0},unapproved_count:5,unapproved_value:6613,legal_count:143,legal_value:219099.1,legal_pct:28.1},
+    "مجمعات العقيلة": {active_count:709,active_value:1659447.33,ended_count:79,ended_value:131569.09,evict_count:43,evict_value:91787.75,evict_legal_count:5,evict_legal_value:4802.5,new_count:48,new_value:101996.5,rent_increase:14836.0,rent_increase_count:80,rent_decrease:20708.05,rent_decrease_count:5,debt1:1994627.66,debt2:583973.42,pending:583668.42,other_pending:305.0,delay_dist:{"1":154,"2":34,"3":31,"4":15,"5":11,"more":0},unapproved_count:6,unapproved_value:6719,legal_count:200,legal_value:305280.92,legal_pct:25.4},
+    "أسواق العارضية": {active_count:578,active_value:681439.5,ended_count:17,ended_value:17416.0,evict_count:9,evict_value:5415.0,evict_legal_count:15,evict_legal_value:18472.5,new_count:33,new_value:31905.0,rent_increase:1245.0,rent_increase_count:8,rent_decrease:14554.0,rent_decrease_count:8,debt1:992979.06,debt2:223606.0,pending:223581.0,other_pending:25.0,delay_dist:{"1":77,"2":37,"3":16,"4":12,"5":9,"more":0},unapproved_count:7,unapproved_value:5915,legal_count:109,legal_value:120773.5,legal_pct:18.3},
+    "العقارات السكنية":{active_count:105,active_value:293698.5,ended_count:0,ended_value:0.0,legal_count:17,legal_value:130432.0,legal_pct:16.2,evict_count:9,evict_value:7218.0,evict_legal_count:1,evict_legal_value:400.0,new_count:8,new_value:9638.0,rent_increase:1140.5,rent_increase_count:3,rent_decrease:0.0,rent_decrease_count:0,debt1:177599.33,debt2:99447.83,pending:98712.0,other_pending:735.83,delay_dist:{"1":25,"2":1,"3":3,"4":0,"5":2,"more":0},unapproved_count:0,unapproved_value:0},
+    "العقارات التجارية":{active_count:60,active_value:231389.3,ended_count:6,ended_value:22350.0,evict_count:4,evict_value:3770.0,evict_legal_count:4,evict_legal_value:6716.5,new_count:3,new_value:1736.0,rent_increase:1965.0,rent_increase_count:2,rent_decrease:1893.0,rent_decrease_count:1,debt1:164655.0,debt2:62082.3,pending:61822.3,other_pending:260.0,delay_dist:{"1":13,"2":7,"3":3,"4":1,"5":0,"more":0},unapproved_count:0,unapproved_value:0},
+    "أملاك خاصة":     {active_count:25,active_value:22110.0,ended_count:1,ended_value:1600.0,evict_count:1,evict_value:800.0,evict_legal_count:1,evict_legal_value:1000.0,new_count:1,new_value:3000.0,rent_increase:0.0,rent_increase_count:0,rent_decrease:0.0,rent_decrease_count:0,debt1:11550.0,debt2:5920.0,pending:5920.0,other_pending:0.0,delay_dist:{"1":3,"2":3,"3":1,"4":3,"5":0,"more":0},unapproved_count:1,unapproved_value:350,legal_count:4,legal_value:1820.0,legal_pct:15.4}
+  },
+  ports: ["أسواق القرين","مجمعات العقيلة","أسواق العارضية","العقارات السكنية","العقارات التجارية","أملاك خاصة"],
+  shorts: ["القرين","العقيلة","العارضية","السكني","التجاري","الخاص"],
+  pages: {"أسواق القرين":"p1","مجمعات العقيلة":"p2","أسواق العارضية":"p3","العقارات السكنية":"p4","العقارات التجارية":"p5","أملاك خاصة":"p8"}
+};
+
+const C={gold:'#c9a84c',teal:'#2dd4bf',blue:'#6366f1',green:'#4ade80',red:'#f87171',orange:'#fb923c',purple:'#a78bfa',blue2:'#818cf8',pink:'#f472b6'};
+const PAL=[C.gold,C.teal,C.blue2,C.green,C.orange,C.purple];
+const BS={x:{ticks:{color:'#64748b',font:{family:'Cairo',size:10}},grid:{color:'rgba(37,45,80,.5)'}},y:{ticks:{color:'#64748b',font:{family:'Cairo',size:10}},grid:{color:'rgba(37,45,80,.5)'}}};
+const BO={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8',font:{family:'Cairo',size:11}}}}};
+
+function fmt(n){if(!n&&n!==0)return'—';const a=Math.abs(n);if(a>=1000000)return(n/1000000).toFixed(2)+'M';if(a>=1000)return(n/1000).toFixed(1)+'K';return Math.round(n).toLocaleString('ar')}
+function fmtF(n){if(!n&&n!==0)return'—';return Math.round(n).toLocaleString('ar')}
+
+// top-labels plugin — vertical bars: above bar | horizontal bars: right of bar outside
+Chart.register({id:'topLbls',afterDatasetsDraw(chart){
+  const{ctx,config}=chart;
+  const isHoriz=config.options&&config.options.indexAxis==='y';
+  // skip doughnut/pie
+  if(config.type==='doughnut'||config.type==='pie')return;
+  chart.data.datasets.forEach((ds,di)=>{
+    const meta=chart.getDatasetMeta(di);
+    if(meta.hidden)return;
+    meta.data.forEach((bar,i)=>{
+      const v=ds.data[i];if(!v||v===0)return;
+      const lb=Math.abs(v)>=1000000?(v/1000000).toFixed(1)+'M':Math.abs(v)>=1000?(v/1000).toFixed(0)+'K':Math.round(v).toLocaleString();
+      ctx.save();ctx.font='bold 9.5px Cairo';ctx.fillStyle='#94a3b8';
+      if(isHoriz){
+        // أفقي: الرقم يمين البار بمسافة 4px خارجه
+        const xEnd=bar.x;
+        ctx.textAlign='left';
+        ctx.textBaseline='middle';
+        ctx.fillText(lb, xEnd+5, bar.y);
+      } else {
+        // عمودي: الرقم فوق البار بـ 6px
+        ctx.textAlign='center';
+        ctx.textBaseline='bottom';
+        ctx.fillText(lb, bar.x, bar.y-4);
+      }
+      ctx.restore();
+    });
+  });
+}});
+
+// delay bars builder
+function buildDelayBars(containerId, delayData){
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  const items=[
+    {label:'شهر 1',key:'1',color:C.green},
+    {label:'شهرين',key:'2',color:C.orange},
+    {label:'3 أشهر',key:'3',color:C.red},
+    {label:'4 أشهر',key:'4',color:C.purple},
+    {label:'5+ أشهر',key:'5+',color:'#ef4444'},
+  ];
+  const maxN=Math.max(...items.map(it=>it.key==='5+'?(delayData['5']||0)+(delayData['more']||0):(delayData[it.key]||0)),1);
+  el.innerHTML=items.map(({label,key,color})=>{
+    const n=key==='5+'?(delayData['5']||0)+(delayData['more']||0):(delayData[key]||0);
+    const w=Math.round(n/maxN*100);
+    return`<div style="display:flex;align-items:center;gap:8px">
+      <div style="font-size:10px;color:var(--text3);width:50px">${label}</div>
+      <div style="flex:1;height:7px;background:var(--bg3);border-radius:4px;overflow:hidden">
+        <div style="width:${w}%;height:100%;background:${color};border-radius:4px;transition:width .5s"></div>
+      </div>
+      <div style="font-family:'Tajawal';font-size:13px;font-weight:700;color:${color};width:22px;text-align:center">${n||'—'}</div>
+    </div>`;
+  }).join('');
+}
+
+// ===== OVERVIEW CHARTS =====
+function initOverview(){
+  const P=DATA.ports, S=DATA.shorts;
+
+  // تحصيل بار
+  new Chart(document.getElementById('chCollPort'),{
+    type:'bar',
+    data:{labels:S,datasets:[{label:'التحصيل الفعلي',data:P.map(p=>DATA.collections[p].real.total),backgroundColor:PAL.map(c=>c+'99'),borderColor:PAL,borderWidth:2,borderRadius:6}]},
+    options:{...BO,plugins:{...BO.plugins,legend:{display:false}},scales:{...BS,y:{...BS.y,ticks:{callback:v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v,color:'#64748b',font:{family:'Cairo',size:10}}}}}
+  });
+
+  // donut
+  const pre=P.reduce((s,p)=>s+DATA.collections[p].real.pre,0);
+  const curr=P.reduce((s,p)=>s+DATA.collections[p].real.curr,0);
+  const adv=P.reduce((s,p)=>s+DATA.collections[p].real.adv,0);
+  const gt=pre+curr+adv;
+  new Chart(document.getElementById('chCollPeriod'),{
+    type:'doughnut',
+    data:{
+      labels:[`متأخرات قبل 2026 (${(pre/gt*100).toFixed(1)}%)`,`يناير—مايو 2026 (${(curr/gt*100).toFixed(1)}%)`,`مقدم (${(adv/gt*100).toFixed(1)}%)`],
+      datasets:[{data:[pre,curr,adv],backgroundColor:[C.orange+'cc',C.teal+'cc',C.purple+'cc'],borderColor:[C.orange,C.teal,C.purple],borderWidth:2}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{family:'Cairo',size:10},padding:8}},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)+' دك'}}}}
+  });
+
+  // حركة العقود - قيمة
+  new Chart(document.getElementById('chMovement'),{
+    type:'bar',
+    data:{labels:S,datasets:[
+      {label:'جديد',data:P.map(p=>DATA.contracts[p].new_value),backgroundColor:C.teal+'aa',borderRadius:4},
+      {label:'إخلاء غير قانوني',data:P.map(p=>DATA.contracts[p].evict_value),backgroundColor:C.orange+'aa',borderRadius:4},
+      {label:'إخلاء قانوني',data:P.map(p=>DATA.contracts[p].evict_legal_value),backgroundColor:C.red+'aa',borderRadius:4},
+    ]},
+    options:{...BO,plugins:{...BO.plugins,legend:{display:true,position:'top',labels:{color:'#94a3b8',font:{family:'Cairo',size:10}}}},
+      scales:{...BS,y:{...BS.y,ticks:{callback:v=>v>=1e3?(v/1e3).toFixed(0)+'K':v,color:'#64748b',font:{family:'Cairo',size:10}}}}}
+  });
+
+  // مديونية
+  new Chart(document.getElementById('chDebt'),{
+    type:'bar',
+    data:{labels:S,datasets:[{label:'ذمم 2026',data:P.map(p=>DATA.contracts[p].debt2),backgroundColor:C.orange+'99',borderColor:C.orange,borderWidth:2,borderRadius:6}]},
+    options:{...BO,plugins:{...BO.plugins,legend:{display:false}},scales:{...BS,y:{...BS.y,ticks:{callback:v=>v>=1e3?(v/1e3).toFixed(0)+'K':v,color:'#64748b',font:{family:'Cairo',size:10}}}}}
+  });
+
+  // توزيع التأخر الإجمالي
+  const totalDelay={"1":0,"2":0,"3":0,"4":0,"5":0,"more":0};
+  P.forEach(p=>Object.keys(totalDelay).forEach(k=>totalDelay[k]+=(DATA.contracts[p].delay_dist[k]||0)));
+  buildDelayBars('overviewDelayBars', totalDelay);
+
+  // مقارنة طرق التحصيل - horizontal bar مرتب
+  const mLabels=['تحصيل فعلي','إعفاء','إعفاء إداري','إعفاء قانوني','شيكات مؤجلة','تأمين'];
+  const mVals=[
+    P.reduce((s,p)=>s+DATA.collections[p].real.total,0),
+    P.reduce((s,p)=>s+DATA.collections[p].exemption.total,0),
+    P.reduce((s,p)=>s+DATA.collections[p].admin.total,0),
+    P.reduce((s,p)=>s+DATA.collections[p].legal.total,0),
+    P.reduce((s,p)=>s+DATA.collections[p].checks.total,0),
+    P.reduce((s,p)=>s+DATA.collections[p].ins_col,0),
+  ];
+  const mColors=[C.gold,C.teal,C.blue2,C.purple,C.orange,C.pink];
+  new Chart(document.getElementById('chMethods'),{
+    type:'bar',
+    data:{labels:mLabels,datasets:[{data:mVals,backgroundColor:mColors.map(c=>c+'bb'),borderColor:mColors,borderWidth:1.5,borderRadius:5}]},
+    options:{...BO,indexAxis:'y',plugins:{...BO.plugins,legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)+' دك'}}},
+      scales:{
+        x:{...BS.x,ticks:{callback:v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v,color:'#64748b',font:{family:'Cairo',size:9}},grid:{color:'rgba(37,45,80,.4)'}},
+        y:{...BS.y,ticks:{color:'#94a3b8',font:{family:'Cairo',size:10}},grid:{display:false}}
+      }
+    }
+  });
+}
+
+// ===== BUILD PORTFOLIO PAGE =====
+function buildPort(pname){
+  const pid=DATA.pages[pname];
+  const el=document.getElementById('page-'+pid);
+  if(el.dataset.built)return; el.dataset.built='1';
+
+  const col=DATA.collections[pname];
+  const con=DATA.contracts[pname];
+  const totalDebt=DATA.ports.reduce((s,p)=>s+DATA.contracts[p].debt_total,0);
+  const debtPct=(con.debt2/1306973.85*100).toFixed(1);
+  const totalExempt=col.exemption.total+col.legal.total;
+  const exemPct=col.real.total>0?(totalExempt/col.real.total*100).toFixed(1):0;
+  const netVal=con.new_value-(con.evict_value+con.evict_legal_value)+con.rent_increase-con.rent_decrease;
+  const netSign=netVal>=0?'+':'';
+  const netCls=netVal>=0?'netp':'netn';
+  const netIc=netVal>=0?'📈':'📉';
+  const netColor=netVal>=0?'var(--green)':'var(--red)';
+
+  el.innerHTML=`
+  <!-- التحصيلات -->
+  <div class="sec-title"><div class="dot"></div><h2>التحصيلات</h2><span class="sub">من 1 يناير حتى 24 مايو 2026</span></div>
+  <div class="kpi-grid">
+    <div class="kpi gold"><span class="kpi-ic">💰</span><div class="kpi-lb">التحصيل الفعلي</div><div class="kpi-val">${fmt(col.real.total)}</div><div class="kpi-sub">نقدي + شيكات + أونلاين + كي نت</div></div>
+    <div class="kpi teal"><span class="kpi-ic">🔵</span><div class="kpi-lb">إجمالي الإعفاءات</div><div class="kpi-val">${fmt(totalExempt)}</div><div class="kpi-sub">إعفاء ${fmt(col.exemption.total)} | قانوني ${fmt(col.legal.total)}</div></div>
+    <div class="kpi purple"><span class="kpi-ic">⚖️</span><div class="kpi-lb">الإعفاء القانوني</div><div class="kpi-val">${fmt(col.legal.total)}</div><div class="kpi-sub">متأخرات: ${fmt(col.legal.pre)} | حالي: ${fmt(col.legal.curr)}</div></div>
+    <div class="kpi orange"><span class="kpi-ic">📊</span><div class="kpi-lb">نسبة الإعفاء للتحصيل</div><div class="kpi-val">${exemPct}%</div><div class="kpi-sub">إجمالي الإعفاء ÷ التحصيل الفعلي</div></div>
+    <div class="kpi blue"><span class="kpi-ic">📑</span><div class="kpi-lb">شيكات مؤجلة</div><div class="kpi-val">${fmt(col.checks.total)}</div><div class="kpi-sub">قبل 2026: ${fmt(col.checks.pre)}</div></div>
+    <div class="kpi pink"><span class="kpi-ic">🛡️</span><div class="kpi-lb">تأمين محصل</div><div class="kpi-val">${fmt(col.ins_col)}</div><div class="kpi-sub">إجمالي دفعات التأمين</div></div>
+  </div>
+
+  <!-- العقود -->
+  <div class="sec-title"><div class="dot"></div><h2>العقود</h2><span class="sub">حالة المحفظة</span></div>
+  <div class="kpi-grid">
+    <div class="kpi green"><span class="kpi-ic">📋</span><div class="kpi-lb">العقود السارية — عدد</div><div class="kpi-val">${con.active_count}</div><div class="kpi-sub">عقود معتمدة نشطة حالياً</div></div>
+    <div class="kpi green"><span class="kpi-ic">💵</span><div class="kpi-lb">العقود السارية — قيمة شهرية</div><div class="kpi-val">${fmt(con.active_value)}</div><div class="kpi-sub">إجمالي الإيجارات الشهرية السارية</div></div>
+    <div class="kpi gray"><span class="kpi-ic">📁</span><div class="kpi-lb">العقود المنتهية — عدد</div><div class="kpi-val">${con.ended_count}</div><div class="kpi-sub">في مرحلة تفاوض على التجديد</div></div>
+    <div class="kpi gray"><span class="kpi-ic">💼</span><div class="kpi-lb">العقود المنتهية — قيمة</div><div class="kpi-val">${fmt(con.ended_value)}</div><div class="kpi-sub">قيمة إيجار العقود المنتهية</div></div>
+    <div class="kpi orange"><span class="kpi-ic">⚠️</span><div class="kpi-lb">ذمم العقود السارية والمنتهية</div><div class="kpi-val">${fmt(con.debt1)}</div><div class="kpi-sub">إجمالي الاستحقاقات المعلقة الحالية</div></div>
+    <div class="kpi red"><span class="kpi-ic">📌</span><div class="kpi-lb">لم يسدد عن استحقاقات 2026</div><div class="kpi-val">${fmt(con.debt2)}</div><div class="kpi-sub">إجمالي الغير مسدد يناير — مايو 2026</div></div>
+    <div class="kpi red"><span class="kpi-ic">⚖️</span><div class="kpi-lb">عقود محولة للقانونية — عدد</div><div class="kpi-val">${con.legal_count}</div><div class="kpi-sub">${con.legal_pct}% من إجمالي العقود</div></div>
+    <div class="kpi red"><span class="kpi-ic">💰</span><div class="kpi-lb">عقود محولة للقانونية — قيمة</div><div class="kpi-val">${fmt(con.legal_value)}</div><div class="kpi-sub">إجمالي قيمة الإيجارات القانونية</div></div>
+    ${con.unapproved_count>0?`<div class="kpi red"><span class="kpi-ic">❌</span><div class="kpi-lb">عقود غير معتمدة</div><div class="kpi-val">${con.unapproved_count}</div><div class="kpi-sub">قيمة: ${fmt(con.unapproved_value)} دك</div></div>`:''}
+  </div>
+
+  <!-- حركة العقود -->
+  <div class="sec-title"><div class="dot"></div><h2>حركة العقود في 2026</h2></div>
+  <div class="move-grid">
+    <div class="mv new-c"><div class="mv-ic">📝</div><div class="mv-lb">عقود جديدة</div><div class="mv-val">${con.new_count}</div><div class="mv-sub">قيمة: ${fmt(con.new_value)} دك</div></div>
+    <div class="mv ev"><div class="mv-ic">🚪</div><div class="mv-lb">إخلاء غير قانوني</div><div class="mv-val">${con.evict_count}</div><div class="mv-sub">قيمة: ${fmt(con.evict_value)} دك</div></div>
+    <div class="mv evl"><div class="mv-ic">⚖️</div><div class="mv-lb">إخلاء قانوني</div><div class="mv-val">${con.evict_legal_count}</div><div class="mv-sub">قيمة: ${fmt(con.evict_legal_value)} دك</div></div>
+    <div class="mv inc"><div class="mv-ic">📈</div><div class="mv-lb">زيادة في الإيجار</div><div class="mv-val">${con.rent_increase_count}</div><div class="mv-sub">+ ${fmt(con.rent_increase)} دك</div></div>
+    <div class="mv dec"><div class="mv-ic">📉</div><div class="mv-lb">انخفاض في الإيجار</div><div class="mv-val">${con.rent_decrease_count}</div><div class="mv-sub">- ${fmt(con.rent_decrease)} دك</div></div>
+    <div class="mv ${netCls}"><div class="mv-ic">${netIc}</div><div class="mv-lb">صافي حركة القيمة</div><div class="mv-val" style="color:${netColor}">${netSign}${fmt(netVal)}</div><div class="mv-sub">دك — ${netVal>=0?'نمو إيجاري ✅':'تراجع إيجاري ⚠️'}</div></div>
+  </div>
+
+  <!-- تفاصيل -->
+  <div class="g65">
+    <div class="card">
+      <div class="card-t">تحليل طرق التحصيل التفصيلي <span class="badge">دك</span></div>
+      <div class="ts"><table class="tbl">
+        <thead><tr><th>نوع / طريقة الدفع</th><th>الإجمالي</th><th>قبل 2026</th><th>يناير—مايو 2026</th><th>مقدم</th></tr></thead>
+        <tbody>
+          <tr><td>✅ تحصيل فعلي</td><td><span class="n t">${fmtF(col.real.total)}</span></td><td><span class="n p">${fmtF(col.real.pre)}</span></td><td><span class="n c">${fmtF(col.real.curr)}</span></td><td><span class="n a">${fmtF(col.real.adv)}</span></td></tr>
+          <tr><td>🔵 إعفاء</td><td><span class="n t">${fmtF(col.exemption.total)}</span></td><td><span class="n p">${fmtF(col.exemption.pre)}</span></td><td><span class="n c">${fmtF(col.exemption.curr)}</span></td><td><span class="n a">${fmtF(col.exemption.adv)}</span></td></tr>
+          <tr><td>🔷 إعفاء إداري</td><td><span class="n t">${fmtF(col.admin.total)}</span></td><td><span class="n p">${fmtF(col.admin.pre)}</span></td><td><span class="n c">${fmtF(col.admin.curr)}</span></td><td><span class="n a">${fmtF(col.admin.adv)}</span></td></tr>
+          <tr><td>⚖️ إعفاء قانوني</td><td><span class="n t">${fmtF(col.legal.total)}</span></td><td><span class="n p">${fmtF(col.legal.pre)}</span></td><td><span class="n c">${fmtF(col.legal.curr)}</span></td><td><span class="n a">${fmtF(col.legal.adv)}</span></td></tr>
+          <tr><td>📑 شيكات مؤجلة</td><td><span class="n t">${fmtF(col.checks.total)}</span></td><td><span class="n p">${fmtF(col.checks.pre)}</span></td><td><span class="n c">${fmtF(col.checks.curr)}</span></td><td><span class="n a">${fmtF(col.checks.adv)}</span></td></tr>
+          ${col.ins_tr>0?`<tr><td>🔄 تحويل تأمين لإيجار</td><td colspan="4"><span class="n s">${fmtF(col.ins_tr)}</span></td></tr>`:''}
+          ${col.court>0?`<tr><td>⚖️ ايداعات بالمحكمة</td><td colspan="4"><span class="n s">${fmtF(col.court)}</span></td></tr>`:''}
+          ${col.settle>0?`<tr><td>🤝 تسويات</td><td colspan="4"><span class="n s">${fmtF(col.settle)}</span></td></tr>`:''}
+          <tr><td>🛡️ تأمين محصل</td><td colspan="4"><span class="n" style="color:var(--purple)">${fmtF(col.ins_col)}</span></td></tr>
+          <tr class="tr-total">
+            <td><strong>📊 المجموع الكلي</strong></td>
+            <td><span class="n t">${fmtF(col.real.total+col.exemption.total+col.admin.total+col.legal.total+col.checks.total+col.ins_tr+col.court+col.settle+col.ins_col)}</span></td>
+            <td><span class="n p">${fmtF(col.real.pre+col.exemption.pre+col.admin.pre+col.legal.pre+col.checks.pre)}</span></td>
+            <td><span class="n c">${fmtF(col.real.curr+col.exemption.curr+col.admin.curr+col.legal.curr+col.checks.curr)}</span></td>
+            <td><span class="n a">${fmtF(col.real.adv+col.exemption.adv+col.admin.adv+col.legal.adv+col.checks.adv)}</span></td>
+          </tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <!-- ذمم -->
+      <div class="card">
+        <div class="card-t">لم يسدد عن استحقاقات 2026</div>
+        <div style="text-align:center;padding:8px 0">
+          <div style="font-family:'Tajawal';font-size:22px;font-weight:900;color:var(--orange)">${fmtF(con.debt1)}</div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:4px">ذمم السارية والمنتهية</div>
+          <div style="font-family:'Tajawal';font-size:22px;font-weight:900;color:var(--red)">${fmtF(con.debt2)}</div>
+          <div style="font-size:9px;color:var(--text3)">لم يسدد عن استحقاقات 2026</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">دينار كويتي</div>
+          <div style="display:flex;gap:14px;justify-content:center;margin-top:14px;flex-wrap:wrap">
+            <div style="text-align:center;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:10px;padding:10px 16px">
+              <div style="font-size:9px;color:var(--text3);margin-bottom:4px">من إجمالي لم يسدد 2026</div>
+              <div style="font-family:'Tajawal';font-size:20px;font-weight:900;color:var(--red)">${debtPct}%</div>
+              <div style="font-size:9px;color:var(--text3);margin-top:2px">من 1.31M دك</div>
+            </div>
+            <div style="text-align:center;background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.2);border-radius:10px;padding:10px 16px">
+              <div style="font-size:9px;color:var(--text3);margin-bottom:4px">من ذمم السارية والمنتهية</div>
+              <div style="font-family:'Tajawal';font-size:20px;font-weight:900;color:var(--orange)">${(con.debt2/con.debt1*100).toFixed(1)}%</div>
+              <div style="font-size:9px;color:var(--text3);margin-top:2px">من ${fmt(con.debt1)} دك</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- توزيع التأخر -->
+      <div class="card">
+        <div class="card-t">توزيع التأخر بالأشهر</div>
+        <div style="display:flex;flex-direction:column;gap:9px;padding:2px 0" id="delay_${pid}"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="g2">
+    <div class="card">
+      <div class="card-t">توزيع التحصيل الفعلي حسب الفترة</div>
+      <div class="cw-sm"><canvas id="ch_${pid}_period"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-t">مقارنة طرق التحصيل</div>
+      <div class="cw-sm"><canvas id="ch_${pid}_methods"></canvas></div>
+    </div>
+  </div>`;
+
+  setTimeout(()=>{
+    buildDelayBars('delay_'+pid, con.delay_dist);
+
+    const pre2=col.real.pre,curr2=col.real.curr,adv2=col.real.adv,gt2=pre2+curr2+adv2;
+    new Chart(document.getElementById('ch_'+pid+'_period'),{
+      type:'doughnut',
+      data:{labels:[`متأخرات قبل 2026 (${gt2>0?(pre2/gt2*100).toFixed(1):0}%)`,`يناير—مايو 2026 (${gt2>0?(curr2/gt2*100).toFixed(1):0}%)`,`مقدم (${gt2>0?(adv2/gt2*100).toFixed(1):0}%)`],
+        datasets:[{data:[pre2,curr2,adv2],backgroundColor:[C.orange+'cc',C.teal+'cc',C.purple+'cc'],borderColor:[C.orange,C.teal,C.purple],borderWidth:2}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{family:'Cairo',size:10},padding:7}},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)+' دك'}}}}
+    });
+
+    const mL2=['تحصيل فعلي','إعفاء','إعفاء قانوني','شيكات مؤجلة','تأمين'];
+    const mV2=[col.real.total,col.exemption.total,col.legal.total,col.checks.total,col.ins_col];
+    const mC2=[C.gold,C.teal,C.purple,C.orange,C.pink];
+    const filtered=mL2.map((l,i)=>({l,v:mV2[i],c:mC2[i]})).filter(x=>x.v>0);
+    new Chart(document.getElementById('ch_'+pid+'_methods'),{
+      type:'bar',
+      data:{labels:filtered.map(x=>x.l),datasets:[{data:filtered.map(x=>x.v),backgroundColor:filtered.map(x=>x.c+'bb'),borderColor:filtered.map(x=>x.c),borderWidth:1.5,borderRadius:5}]},
+      options:{...BO,indexAxis:'y',plugins:{...BO.plugins,legend:{display:false}},
+        scales:{x:{...BS.x,ticks:{callback:v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v,color:'#64748b',font:{family:'Cairo',size:9}},grid:{color:'rgba(37,45,80,.4)'}},y:{...BS.y,ticks:{color:'#94a3b8',font:{family:'Cairo',size:10}},grid:{display:false}}}}
+    });
+  },100);
+}
+
+// ===== NAV =====
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const order=['overview','p1','p2','p3','p4','p5','p8'];
+  const tabs=document.querySelectorAll('.tab-btn');
+  const idx=order.indexOf(id);
+  if(tabs[idx])tabs[idx].classList.add('active');
+  const pm={p1:'أسواق القرين',p2:'مجمعات العقيلة',p3:'أسواق العارضية',p4:'العقارات السكنية',p5:'العقارات التجارية',p8:'أملاك خاصة'};
+  if(pm[id])buildPort(pm[id]);
+}
+
+window.addEventListener('DOMContentLoaded',()=>setTimeout(initOverview,200));
+</script>
+</body>
+</html>
