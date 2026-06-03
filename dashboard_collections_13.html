@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>داشبورد التحصيلات 2026</title>
+<script>
+(function(){
+  const PASS = '2026';
+  const KEY = 'dashboard_auth_2026';
+  if(sessionStorage.getItem(KEY) === '1') return;
+  document.addEventListener('DOMContentLoaded', function(){
+    document.body.style.display = 'none';
+    var overlay = document.createElement('div');
+    overlay.id = 'auth-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:linear-gradient(135deg,#1e293b,#0f172a);display:flex;align-items:center;justify-content:center;z-index:99999;font-family:Cairo,sans-serif;direction:rtl';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:20px;padding:48px 40px;width:360px;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,.4)">
+        <div style="font-size:40px;margin-bottom:16px">🔐</div>
+        <h2 style="color:#1e293b;font-size:20px;font-weight:800;margin-bottom:6px">داشبورد التحصيلات</h2>
+        <p style="color:#64748b;font-size:13px;margin-bottom:28px">أدخل كلمة المرور للمتابعة</p>
+        <input id="pass-input" type="password" placeholder="كلمة المرور" style="width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:10px;font-size:16px;font-family:Cairo,sans-serif;text-align:center;outline:none;transition:border .2s;margin-bottom:8px">
+        <div id="pass-err" style="color:#f87171;font-size:12px;height:18px;margin-bottom:8px"></div>
+        <button id="pass-btn" style="width:100%;padding:13px;background:linear-gradient(135deg,#c9a84c,#e8c97a);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:Cairo,sans-serif;cursor:pointer">دخول</button>
+      </div>`;
+    document.body.appendChild(overlay);
+    document.body.style.display = '';
+    var input = document.getElementById('pass-input');
+    var btn = document.getElementById('pass-btn');
+    var err = document.getElementById('pass-err');
+    input.focus();
+    input.addEventListener('focus', function(){ this.style.borderColor='#c9a84c'; });
+    input.addEventListener('blur',  function(){ this.style.borderColor='#e2e8f0'; });
+    function tryLogin(){
+      if(input.value === PASS){
+        sessionStorage.setItem(KEY,'1');
+        overlay.style.opacity='0';
+        overlay.style.transition='opacity .3s';
+        setTimeout(function(){ overlay.remove(); },300);
+      } else {
+        err.textContent = 'كلمة المرور غير صحيحة';
+        input.style.borderColor='#f87171';
+        input.value='';
+        input.focus();
+        setTimeout(function(){ err.textContent=''; input.style.borderColor='#e2e8f0'; },2000);
+      }
+    }
+    btn.addEventListener('click', tryLogin);
+    input.addEventListener('keydown', function(e){ if(e.key==='Enter') tryLogin(); });
+  });
+})();
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f0f4f8;--bg2:#e2e8f0;--bg3:#d8e1ed;--card:#ffffff;
+  --border:#cbd5e1;--border2:#94a3b8;
+  --gold:#c9a84c;--gold2:#e8c97a;--teal:#2dd4bf;--blue:#6366f1;--blue2:#818cf8;
+  --red:#f87171;--green:#4ade80;--orange:#fb923c;--purple:#a78bfa;--pink:#f472b6;
+  --text:#1e293b;--text2:#475569;--text3:#64748b;
+  --shadow:0 8px 32px rgba(0,0,0,.12);--radius:16px;--radius2:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.header{background:linear-gradient(135deg,#f8fafc,#edf2f7,#f8fafc);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.header-inner{display:flex;align-items:center;justify-content:space-between;padding:12px 28px;gap:16px;flex-wrap:wrap}
+.header-brand{display:flex;align-items:center;gap:12px}
+.logo-icon{width:42px;height:42px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 4px 16px rgba(201,168,76,.3);flex-shrink:0}
+.brand-text h1{font-family:'Tajawal',sans-serif;font-size:17px;font-weight:800;color:var(--gold2)}
+.brand-text p{font-size:11px;color:var(--text3)}
+.header-period{background:linear-gradient(135deg,rgba(201,168,76,.1),rgba(201,168,76,.05));border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:7px 14px;text-align:center}
+.header-period .pl{font-size:10px;color:var(--text3)}
+.header-period .pv{font-size:12px;font-weight:700;color:var(--gold2)}
+.filter-bar{background:#fff;border-bottom:1px solid var(--border);padding:10px 28px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.filter-label{font-size:11px;font-weight:700;color:var(--text3);white-space:nowrap}
+.pills{display:flex;gap:5px;flex-wrap:wrap}
+.pill{padding:5px 12px;background:var(--bg2);border:1px solid var(--border);color:var(--text3);border-radius:20px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:11px;font-weight:600;transition:all .2s;white-space:nowrap}
+.pill:hover{border-color:var(--gold);color:var(--gold2)}
+.pill.active{background:rgba(201,168,76,.15);border-color:var(--gold);color:var(--gold2)}
+.pill.active-all{background:rgba(201,168,76,.2);border-color:var(--gold2);color:var(--gold2);font-weight:700}
+.filter-sep{width:1px;height:28px;background:var(--border);flex-shrink:0}
+.view-label{font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;color:var(--text2);white-space:nowrap}
+.main{padding:24px 28px;max-width:1700px;margin:0 auto}
+.sec-title{display:flex;align-items:center;gap:10px;margin-bottom:16px;margin-top:4px}
+.sec-title .dot{width:4px;height:26px;background:linear-gradient(to bottom,var(--gold),var(--teal));border-radius:2px}
+.sec-title h2{font-family:'Tajawal',sans-serif;font-size:17px;font-weight:700}
+.sec-title .sub{font-size:11px;color:var(--text3);margin-right:6px}
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.kpi:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.kpi::before{content:'';position:absolute;top:0;right:0;width:70px;height:70px;border-radius:0 16px 0 100%;opacity:.06}
+.kpi.gold::before{background:var(--gold)}.kpi.teal::before{background:var(--teal)}.kpi.blue::before{background:var(--blue)}
+.kpi.green::before{background:var(--green)}.kpi.red::before{background:var(--red)}.kpi.orange::before{background:var(--orange)}
+.kpi.purple::before{background:var(--purple)}.kpi.pink::before{background:var(--pink)}
+.kpi-ic{font-size:19px;margin-bottom:9px;display:block}
+.kpi-lb{font-size:11px;color:var(--text3);font-weight:700;margin-bottom:4px;letter-spacing:.3px}
+.kpi-val{font-family:'Tajawal',sans-serif;font-size:20px;font-weight:800;line-height:1.1}
+.kpi.gold .kpi-val{color:var(--gold2)}.kpi.teal .kpi-val{color:var(--teal)}.kpi.blue .kpi-val{color:var(--blue2)}
+.kpi.green .kpi-val{color:var(--green)}.kpi.red .kpi-val{color:var(--red)}.kpi.orange .kpi-val{color:var(--orange)}
+.kpi.purple .kpi-val{color:var(--purple)}.kpi.pink .kpi-val{color:var(--pink)}
+.kpi-sub{font-size:11.5px;color:var(--text3);margin-top:3px;line-height:1.4}
+/* KPI sub breakdown */
+.kpi-sub2{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--bg3)}
+.kpi-sub2-item{flex:1;text-align:center}
+.kpi-sub2-lbl{font-size:11px;color:var(--text3);display:block;margin-bottom:3px;font-weight:600}
+.kpi-sub2-val{font-family:'Tajawal';font-size:14px;font-weight:800;display:block}
+.kpi-sub2-val.pre{color:var(--orange)}.kpi-sub2-val.curr{color:var(--teal)}.kpi-sub2-val.adv{color:var(--purple)}
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:20px}
+.g65{display:grid;grid-template-columns:1.5fr 1fr;gap:18px;margin-bottom:20px}
+.full{grid-column:1/-1}
+/* CARD */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;overflow:hidden}
+.card-t{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.badge{font-size:9.5px;background:rgba(201,168,76,.1);color:var(--gold2);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:2px 7px}
+.cw{position:relative;height:210px}
+.cw-sm{position:relative;height:180px}
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{background:var(--bg3);color:var(--text3);font-weight:700;font-size:11px;padding:9px 11px;text-align:right;border-bottom:1px solid var(--border2)}
+.tbl td{padding:9px 11px;border-bottom:1px solid rgba(203,213,225,.6);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(0,0,0,.015)}
+.tbl .tr-total td{background:rgba(201,168,76,.05);border-top:1px solid rgba(201,168,76,.2);font-weight:700;color:var(--gold2)}
+.n{font-family:'Tajawal',sans-serif;font-weight:700;font-size:14px}
+.n.t{color:#a07828}.n.p{color:#c4611a}.n.c{color:#0f9080}.n.a{color:#6d4ed4}
+/* compare bars */
+.cmp-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.cmp-bar-lbl{font-size:11px;color:var(--text3);width:80px;text-align:right;flex-shrink:0;font-weight:600}
+.cmp-bar-wrap{flex:1;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.cmp-bar-fill{height:100%;border-radius:4px;transition:width .6s}
+.cmp-bar-val{font-family:'Tajawal';font-size:13px;font-weight:700;width:60px;flex-shrink:0}
+/* compare section */
+.compare-sec{display:none}
+.ts{overflow-x:auto}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+@media(max-width:1100px){.g65{grid-template-columns:1fr}}
+@media(max-width:900px){.g2,.g3{grid-template-columns:1fr}.main{padding:14px}.kpi-grid{grid-template-columns:repeat(2,1fr)}.filter-bar{padding:10px 16px}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-brand">
+      <div class="logo-icon">📊</div>
+      <div class="brand-text">
+        <h1>داشبورد التحصيلات</h1>
+        <p>تحليل تفصيلي لتحصيلات الإيجارات والخدمات</p>
+      </div>
+    </div>
+    <div class="header-period">
+      <div class="pl">الفترة المالية</div>
+      <div class="pv" id="period-label">يناير — 3 يونيو 2026</div>
+    </div>
+  </div>
+  <div class="filter-bar">
+    <span class="filter-label">📅 الشهر:</span>
+    <div class="pills" id="month-pills">
+      <button class="pill active-all" onclick="toggleMonth('all',this)">الإجمالي</button>
+      <button class="pill" onclick="toggleMonth(1,this)">يناير</button>
+      <button class="pill" onclick="toggleMonth(2,this)">فبراير</button>
+      <button class="pill" onclick="toggleMonth(3,this)">مارس</button>
+      <button class="pill" onclick="toggleMonth(4,this)">أبريل</button>
+      <button class="pill" onclick="toggleMonth(5,this)">مايو</button>
+      <button class="pill" onclick="toggleMonth(6,this)">3 يونيو</button>
+    </div>
+    <div class="filter-sep"></div>
+    <span class="filter-label">🏢 المحفظة:</span>
+    <div class="pills" id="port-pills">
+      <button class="pill active-all" onclick="selectPort('all',this)">جميع المحافظ</button>
+      <button class="pill" onclick="selectPort('1 - أسواق القرين',this)">القرين</button>
+      <button class="pill" onclick="selectPort('2 - مجمعات العقيلة',this)">العقيلة</button>
+      <button class="pill" onclick="selectPort('3 - أسواق العارضية',this)">العارضية</button>
+      <button class="pill" onclick="selectPort('4 - العقارات السكنية',this)">السكني</button>
+      <button class="pill" onclick="selectPort('5 - العقارات التجارية',this)">التجاري</button>
+      <button class="pill" onclick="selectPort('8 - أملاك خاصة',this)">أملاك خاصة</button>
+    </div>
+    <span class="view-label" id="view-label" style="margin-right:auto">جميع المحافظ — الإجمالي</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ====== KPI ROW ====== -->
+  <div class="sec-title"><div class="dot"></div><h2>التحصيل النقدي</h2><span class="sub" id="kpi-sub-label">يناير — 3 يونيو 2026</span></div>
+  <div class="kpi-grid">
+    <div class="kpi gold">
+      <span class="kpi-ic">💰</span>
+      <div class="kpi-lb">التحصيل النقدي للإيجارات والخدمات</div>
+      <div class="kpi-val" id="kv-real">—</div>
+      <div class="kpi-sub2">
+        <div class="kpi-sub2-item"><span class="kpi-sub2-lbl">متأخرات</span><span class="kpi-sub2-val pre" id="kv-real-pre">—</span></div>
+        <div class="kpi-sub2-item"><span class="kpi-sub2-lbl">حالي</span><span class="kpi-sub2-val curr" id="kv-real-curr">—</span></div>
+        <div class="kpi-sub2-item"><span class="kpi-sub2-lbl">مقدم</span><span class="kpi-sub2-val adv" id="kv-real-adv">—</span></div>
+      </div>
+    </div>
+    <div class="kpi blue">
+      <span class="kpi-ic">🔧</span>
+      <div class="kpi-lb">تحصيل الخدمات (إيرادات أخرى)</div>
+      <div class="kpi-val" id="kv-svc">—</div>
+      <div class="kpi-sub2">
+        <div class="kpi-sub2-item"><span class="kpi-sub2-lbl">متأخرات</span><span class="kpi-sub2-val pre" id="kv-svc-pre">—</span></div>
+        <div class="kpi-sub2-item"><span class="kpi-sub2-lbl">حالي</span><span class="kpi-sub2-val curr" id="kv-svc-curr">—</span></div>
+        <div class="kpi-sub2-item"><span class="kpi-sub2-lbl">مقدم</span><span class="kpi-sub2-val adv" id="kv-svc-adv">—</span></div>
+      </div>
+    </div>
+    <div class="kpi teal">
+      <span class="kpi-ic">🔵</span>
+      <div class="kpi-lb">إجمالي الإعفاء (عادي + قانوني)</div>
+      <div class="kpi-val" id="kv-ex">—</div>
+      <div class="kpi-sub2">
+        <div class="kpi-sub2-item"><span class="kpi-sub2-lbl">متأخرات</span><span class="kpi-sub2-val pre" id="kv-ex-pre">—</span></div>
+        <div class="kpi-sub2-item"><span class="kpi-sub2-lbl">حالي</span><span class="kpi-sub2-val curr" id="kv-ex-curr">—</span></div>
+        <div class="kpi-sub2-item"><span class="kpi-sub2-lbl">مقدم</span><span class="kpi-sub2-val adv" id="kv-ex-adv">—</span></div>
+      </div>
+    </div>
+    <div class="kpi purple">
+      <span class="kpi-ic">⚖️</span>
+      <div class="kpi-lb">الإعفاء القانوني</div>
+      <div class="kpi-val" id="kv-lex">—</div>
+      <div class="kpi-sub2">
+        <div class="kpi-sub2-item"><span class="kpi-sub2-lbl">متأخرات</span><span class="kpi-sub2-val pre" id="kv-lex-pre">—</span></div>
+        <div class="kpi-sub2-item"><span class="kpi-sub2-lbl">حالي</span><span class="kpi-sub2-val curr" id="kv-lex-curr">—</span></div>
+        <div class="kpi-sub2-item"><span class="kpi-sub2-lbl">مقدم</span><span class="kpi-sub2-val adv" id="kv-lex-adv">—</span></div>
+      </div>
+    </div>
+    <div class="kpi orange">
+      <span class="kpi-ic">📊</span>
+      <div class="kpi-lb">نسبة الإعفاء للتحصيل</div>
+      <div class="kpi-val" id="kv-expt">—</div>
+      <div class="kpi-sub" id="kv-expt-sub">إجمالي الإعفاء ÷ التحصيل النقدي</div>
+    </div>
+    <div class="kpi blue">
+      <span class="kpi-ic">📑</span>
+      <div class="kpi-lb">الشيكات المؤجلة</div>
+      <div class="kpi-val" id="kv-chk">—</div>
+      <div class="kpi-sub2">
+        <div class="kpi-sub2-item"><span class="kpi-sub2-lbl">متأخرات</span><span class="kpi-sub2-val pre" id="kv-chk-pre">—</span></div>
+        <div class="kpi-sub2-item"><span class="kpi-sub2-lbl">حالي</span><span class="kpi-sub2-val curr" id="kv-chk-curr">—</span></div>
+        <div class="kpi-sub2-item"><span class="kpi-sub2-lbl">مقدم</span><span class="kpi-sub2-val adv" id="kv-chk-adv">—</span></div>
+      </div>
+    </div>
+    <div class="kpi pink">
+      <span class="kpi-ic">🛡️</span>
+      <div class="kpi-lb">التأمين المحصل</div>
+      <div class="kpi-val" id="kv-ins">—</div>
+      <div class="kpi-sub">إجمالي دفعات التأمين المحصلة</div>
+    </div>
+  </div>
+
+  <!-- ====== CHARTS ROW 1 ====== -->
+  <div class="g65">
+    <div class="card">
+      <div class="card-t">تحليل طرق التحصيل التفصيلي <span class="badge">دك</span></div>
+      <div class="ts">
+        <table class="tbl">
+          <thead><tr><th>طريقة الدفع</th><th>الإجمالي</th><th>متأخرات</th><th>حالي</th><th>مقدم</th><th>النسبة</th></tr></thead>
+          <tbody id="methods-tbody"></tbody>
+          <tfoot><tr class="tr-total"><td><strong>📊 المجموع</strong></td><td id="tbl-tot"></td><td id="tbl-pre"></td><td id="tbl-curr"></td><td id="tbl-adv"></td><td>100%</td></tr></tfoot>
+        </table>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <div class="card-t">توزيع التحصيل حسب الفترة الزمنية</div>
+        <div class="cw"><canvas id="ch-donut"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-t">مقارنة طرق التحصيل</div>
+        <div style="position:relative;height:160px"><canvas id="ch-methods"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== CHARTS ROW 2 ====== -->
+  <div class="g2">
+    <div class="card">
+      <div class="card-t" id="svc-title">تحصيل الخدمات حسب النوع <span class="badge">دك</span></div>
+      <div id="ch-svc-wrap" style="position:relative;height:220px"><canvas id="ch-svc"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-t">توزيع التحصيل النقدي حسب الفترة</div>
+      <div style="padding:12px 0" id="period-bars"></div>
+    </div>
+  </div>
+
+  <!-- ====== COMPARE SECTION (all ports only) ====== -->
+  <div id="compare-sec" class="compare-sec">
+    <div class="sec-title" style="margin-top:8px"><div class="dot"></div><h2>مقارنة بين المحافظ</h2></div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-t">التحصيل النقدي للإيجارات والخدمات <span class="badge">دك</span></div>
+        <div class="cw-sm"><canvas id="cmp-real"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-t">الشيكات المؤجلة بين المحافظ <span class="badge">دك</span></div>
+        <div class="cw-sm"><canvas id="cmp-chk"></canvas></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-t">الإعفاء (غير القانوني) بين المحافظ <span class="badge">دك</span></div>
+        <div class="cw-sm"><canvas id="cmp-ex"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-t">الإعفاء القانوني بين المحافظ <span class="badge">دك</span></div>
+        <div class="cw-sm"><canvas id="cmp-lex"></canvas></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card full">
+        <div class="card-t">توزيع التحصيل (متأخرات / حالي / مقدم) بين المحافظ</div>
+        <div class="cw"><canvas id="cmp-stacked"></canvas></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card full">
+        <div class="card-t">تحصيل الخدمات بين المحافظ <span class="badge">دك</span></div>
+        <div class="cw-sm"><canvas id="cmp-svc"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+
+const RAWDATA = {"1 - أسواق القرين":{"1":{"real":{"total":744846,"due":{"01":610785,"b":46511,"02":44525,"03":43025}},"svc":{"total":12133,"due":{"01":10470,"b":1212,"03":225,"02":225}},"ex":{"total":8911,"due":{"b":2841,"01":1070,"02":5000}},"lex":{"total":0,"due":{}},"chk":{"total":5350,"due":{"b":5350}},"ins":12410,"ins_tr":8862,"court":0,"settle":3000,"suspense":11900,"methods":{"أونلاين":{"total":459044,"due":{"01":433102,"b":25942}},"تحويل بنكى":{"total":770,"due":{"01":770}},"شيك":{"total":136185,"due":{"b":13427,"01":121258,"02":1500}},"كي نت":{"total":19446,"due":{"b":6816,"01":12630}},"نقدا":{"total":326,"due":{"b":326}},"مستحق من أطراف ذي صلة":{"total":129075,"due":{"01":43025,"03":43025,"02":43025}},"اعفاء":{"total":8911,"due":{"b":2841,"01":1070,"02":5000}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":134208,"due":{"01":70942,"02":63266}},"شيكات مؤجلة":{"total":5350,"due":{"b":5350}}},"svc_types":{"اشتراك كهرباء":8030,"رسوم نظافة":3576,"مقابل فترة السماح":350,"رسوم خدمات أخرى":136,"اشتراك مياه":40},"contract_counts":{"أونلاين":334,"تحويل بنكى":1,"شيك":39,"كي نت":8,"نقدا":1},"grand":929487},"2":{"real":{"total":636448,"due":{"02":539682,"01":40506,"b":56260}},"svc":{"total":9736,"due":{"02":8914,"01":822}},"ex":{"total":82925,"due":{"b":58424,"01":12970,"02":11532}},"lex":{"total":0,"due":{}},"chk":{"total":4000,"due":{"01":2000,"02":2000}},"ins":8440,"ins_tr":7809,"court":0,"settle":0,"suspense":1600,"methods":{"أونلاين":{"total":447171,"due":{"02":408662,"01":31809,"b":6700}},"تحويل بنكى":{"total":0,"due":{}},"شيك":{"total":153543,"due":{"02":120623,"b":30350,"01":2570}},"كي نت":{"total":35734,"due":{"b":19210,"02":10397,"01":6127}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":82925,"due":{"b":58424,"01":12970,"02":11532}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":17330,"due":{"02":16250,"b":810,"01":270}},"شيكات مؤجلة":{"total":4000,"due":{"01":2000,"02":2000}}},"svc_types":{"اشتراك كهرباء":6419,"رسوم نظافة":3140,"رسوم خدمات أخرى":136,"اشتراك مياه":40},"contract_counts":{"أونلاين":322,"تحويل بنكى":0,"شيك":30,"كي نت":12,"نقدا":0},"grand":758551},"3":{"real":{"total":880119,"due":{"02":79157,"03":572214,"01":44017,"05":49809,"04":49629,"b":40428,"06":44865}},"svc":{"total":36885,"due":{"03":35230,"02":302,"b":423,"01":75,"05":405,"04":225,"06":225}},"ex":{"total":11780,"due":{"03":10400,"b":730,"02":650}},"lex":{"total":10400,"due":{"03":10400}},"chk":{"total":9228,"due":{"03":2769,"b":4121,"02":1169,"01":1169}},"ins":2450,"ins_tr":7971,"court":4284,"settle":0,"suspense":2450,"methods":{"أونلاين":{"total":430258,"due":{"02":41722,"03":379853,"01":8406,"b":278}},"تحويل بنكى":{"total":5520,"due":{"04":1840,"06":1840,"05":1840}},"شيك":{"total":278485,"due":{"03":175025,"05":4764,"04":4764,"b":32146,"01":32146,"02":29640}},"كي نت":{"total":36600,"due":{"01":3464,"03":17335,"02":7796,"b":8004}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":129255,"due":{"05":43205,"04":43025,"06":43025}},"اعفاء":{"total":1380,"due":{"b":730,"02":650}},"إعفاء قانوني":{"total":10400,"due":{"03":10400}},"إعفاء إداري":{"total":4500,"due":{"03":3700,"02":800}},"شيكات مؤجلة":{"total":9228,"due":{"03":2769,"b":4121,"02":1169,"01":1169}}},"svc_types":{"رسوم التشغيل":14000,"تكلفة اصلاحات":13000,"اشتراك كهرباء":6712,"رسوم نظافة":2962,"رسوم خدمات أخرى":212},"contract_counts":{"أونلاين":304,"تحويل بنكى":1,"شيك":31,"كي نت":15,"نقدا":0},"grand":922782},"4":{"real":{"total":699012,"due":{"04":514816,"03":140970,"01":10150,"02":12140,"b":16436,"05":375,"a":1500,"12":375,"11":375,"10":375,"09":375,"08":375,"07":375,"06":375}},"svc":{"total":9948,"due":{"04":7550,"01":175,"03":1035,"02":291,"b":897}},"ex":{"total":12741,"due":{"03":2600,"04":10141}},"lex":{"total":0,"due":{}},"chk":{"total":27125,"due":{"03":4264,"b":14740,"02":3857,"01":2948,"04":1316}},"ins":2386,"ins_tr":7630,"court":1000,"settle":0,"suspense":750,"methods":{"أونلاين":{"total":425740,"due":{"04":357642,"03":51136,"01":9125,"02":7837}},"تحويل بنكى":{"total":34140,"due":{"04":29640,"05":375,"a":1500,"12":375,"11":375,"10":375,"09":375,"08":375,"07":375,"06":375}},"شيك":{"total":188728,"due":{"04":114141,"03":74587}},"كي نت":{"total":50404,"due":{"04":13393,"b":16436,"03":15248,"02":4302,"01":1025}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":12741,"due":{"03":2600,"04":10141}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":916,"due":{"04":916}},"شيكات مؤجلة":{"total":27125,"due":{"03":4264,"b":14740,"02":3857,"01":2948,"04":1316}}},"svc_types":{"اشتراك كهرباء":6337,"رسوم نظافة":3330,"رسوم خدمات أخرى":242,"اشتراك مياه":40},"contract_counts":{"أونلاين":298,"تحويل بنكى":2,"شيك":31,"كي نت":21,"نقدا":0},"grand":751559},"5":{"real":{"total":805126,"due":{"05":591277,"04":143295,"02":21774,"03":28288,"b":5850,"01":14642}},"svc":{"total":12933,"due":{"05":9907,"04":1476,"03":550,"02":500,"01":500}},"ex":{"total":162420,"due":{"b":64270,"03":19090,"02":18843,"04":21514,"01":18843,"05":19860}},"lex":{"total":770,"due":{"05":770}},"chk":{"total":59878,"due":{"02":5796,"03":5796,"04":5796,"b":39790,"01":2600,"05":100}},"ins":15680,"ins_tr":17387,"court":1170,"settle":0,"suspense":365,"methods":{"أونلاين":{"total":379170,"due":{"05":353444,"04":25426,"03":300}},"تحويل بنكى":{"total":29640,"due":{"05":29640}},"شيك":{"total":292802,"due":{"05":176787,"01":10742,"02":10742,"03":14742,"04":79788}},"كي نت":{"total":99514,"due":{"04":38080,"02":11032,"03":13246,"b":1850,"01":3900,"05":31406}},"نقدا":{"total":4000,"due":{"b":4000}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":161650,"due":{"b":64270,"03":19090,"02":18843,"04":21514,"01":18843,"05":19090}},"إعفاء قانوني":{"total":770,"due":{"05":770}},"إعفاء إداري":{"total":3090,"due":{"03":772,"02":772,"04":772,"05":772}},"شيكات مؤجلة":{"total":59878,"due":{"02":5796,"03":5796,"04":5796,"b":39790,"01":2600,"05":100}}},"svc_types":{"اشتراك كهرباء":7667,"رسوم نظافة":2815,"فروقات إيجار":1820,"رسوم إدارية":600,"رسوم خدمات أخرى":32},"contract_counts":{"أونلاين":269,"تحويل بنكى":1,"شيك":34,"كي نت":48,"نقدا":1},"grand":1065116},"6":{"real":{"total":72054,"due":{"06":47562,"04":5047,"05":13265,"03":6180}},"svc":{"total":394,"due":{"06":54,"04":29,"05":310}},"ex":{"total":6699,"due":{"06":6699}},"lex":{"total":1348,"due":{"06":1348}},"chk":{"total":2901,"due":{"03":967,"04":967,"05":967}},"ins":0,"ins_tr":6035,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":60529,"due":{"06":47562,"05":12967}},"تحويل بنكى":{"total":0,"due":{}},"شيك":{"total":0,"due":{}},"كي نت":{"total":11525,"due":{"04":5047,"03":6180,"05":298}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":5352,"due":{"06":5352}},"إعفاء قانوني":{"total":1348,"due":{"06":1348}},"إعفاء إداري":{"total":0,"due":{}},"شيكات مؤجلة":{"total":2901,"due":{"03":967,"04":967,"05":967}}},"svc_types":{"اشتراك كهرباء":290,"رسوم نظافة":104},"contract_counts":{"أونلاين":33,"تحويل بنكى":0,"شيك":0,"كي نت":5,"نقدا":0},"grand":87689},"all":{"real":{"total":3837604,"due":{"01":720099,"b":165485,"02":697278,"03":790677,"05":654725,"04":712787,"06":92802,"a":1500,"12":375,"11":375,"10":375,"09":375,"08":375,"07":375}},"svc":{"total":82029,"due":{"01":12042,"b":2532,"03":37040,"02":10232,"05":10622,"04":9280,"06":280}},"ex":{"total":285477,"due":{"b":126264,"01":32883,"02":36024,"03":32090,"04":31655,"05":19860,"06":6699}},"lex":{"total":12518,"due":{"03":10400,"05":770,"06":1348}},"chk":{"total":108482,"due":{"b":64001,"01":8717,"02":12822,"03":13796,"04":8079,"05":1067}},"ins":41366,"ins_tr":55693,"court":6454,"settle":3000,"suspense":17065,"methods":{"أونلاين":{"total":2201912,"due":{"01":482442,"b":32919,"02":458221,"03":431289,"04":383068,"05":366411,"06":47562}},"تحويل بنكى":{"total":70070,"due":{"01":770,"04":31480,"06":2215,"05":31855,"a":1500,"12":375,"11":375,"10":375,"09":375,"08":375,"07":375}},"شيك":{"total":1049744,"due":{"b":75923,"01":166716,"02":162505,"03":264354,"05":181551,"04":198693}},"كي نت":{"total":253222,"due":{"b":52316,"01":27146,"02":33527,"03":52009,"04":56520,"05":31703}},"نقدا":{"total":4326,"due":{"b":4326}},"مستحق من أطراف ذي صلة":{"total":258330,"due":{"01":43025,"03":43025,"02":43025,"05":43205,"04":43025,"06":43025}},"اعفاء":{"total":272959,"due":{"b":126264,"01":32883,"02":36024,"03":21690,"04":31655,"05":19090,"06":5352}},"إعفاء قانوني":{"total":12518,"due":{"03":10400,"05":770,"06":1348}},"إعفاء إداري":{"total":160043,"due":{"01":71212,"02":81088,"b":810,"03":4472,"04":1688,"05":772}},"شيكات مؤجلة":{"total":108482,"due":{"b":64001,"01":8717,"02":12822,"03":13796,"04":8079,"05":1067}}},"svc_types":{"اشتراك كهرباء":35455,"رسوم نظافة":15926,"رسوم التشغيل":14000,"تكلفة اصلاحات":13000,"فروقات إيجار":1820,"رسوم خدمات أخرى":758,"رسوم إدارية":600,"مقابل فترة السماح":350,"اشتراك مياه":120},"contract_counts":{"أونلاين":403,"تحويل بنكى":4,"شيك":57,"كي نت":76,"نقدا":2},"grand":4515184}},"2 - مجمعات العقيلة":{"1":{"real":{"total":1225210,"due":{"01":1021892,"03":32194,"02":65988,"b":103136,"04":2000}},"svc":{"total":31415,"due":{"01":22455,"b":8960}},"ex":{"total":58413,"due":{"b":27391,"01":31022}},"lex":{"total":0,"due":{}},"chk":{"total":93526,"due":{"01":87586,"b":5940}},"ins":81536,"ins_tr":0,"court":0,"settle":0,"suspense":27525,"methods":{"أونلاين":{"total":768763,"due":{"01":745194,"b":23568}},"تحويل بنكى":{"total":36840,"due":{"01":12280,"03":12280,"02":12280}},"شيك":{"total":373169,"due":{"01":252882,"03":19914,"02":53708,"b":44665,"04":2000}},"كي نت":{"total":46438,"due":{"b":34903,"01":11536}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":58413,"due":{"b":27391,"01":31022}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":0,"due":{}},"شيكات مؤجلة":{"total":93526,"due":{"01":87586,"b":5940}}},"svc_types":{"اشتراك كهرباء":10066,"رسوم خدمات أخرى":7328,"رسوم نظافة":7225,"ايرادات أخرى":2162,"فروقات إيجار":1862,"مقابل فترة السماح":1322,"رسوم زيادة احمال كهرباء":750,"أتعاب محاماة":600,"رسوم التشغيل":100},"contract_counts":{"أونلاين":466,"تحويل بنكى":1,"شيك":77,"كي نت":19,"نقدا":0},"grand":1486210},"2":{"real":{"total":1624296,"due":{"02":1137146,"04":173119,"03":192319,"b":50496,"01":71216}},"svc":{"total":22695,"due":{"02":18953,"b":525,"01":2185,"03":516,"04":516}},"ex":{"total":72292,"due":{"02":41980,"01":2678,"03":12705,"04":12705,"b":2224}},"lex":{"total":1046,"due":{"b":1046}},"chk":{"total":5181,"due":{"b":3454,"01":1727}},"ins":9815,"ins_tr":1320,"court":0,"settle":0,"suspense":7290,"methods":{"أونلاين":{"total":768867,"due":{"02":721125,"b":7658,"01":40084}},"تحويل بنكى":{"total":64690,"due":{"01":21651,"03":19400,"02":20039,"b":3400,"04":200}},"شيك":{"total":753387,"due":{"02":384326,"04":172819,"03":172819,"01":8359,"b":15064}},"كي نت":{"total":37052,"due":{"02":11556,"b":24373,"01":1122}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":300,"due":{"03":100,"04":100,"02":100}},"اعفاء":{"total":71246,"due":{"02":41980,"01":2678,"03":12705,"04":12705,"b":1178}},"إعفاء قانوني":{"total":1046,"due":{"b":1046}},"إعفاء إداري":{"total":0,"due":{}},"شيكات مؤجلة":{"total":5181,"due":{"b":3454,"01":1727}}},"svc_types":{"اشتراك كهرباء":8261,"رسوم نظافة":6939,"رسوم خدمات أخرى":6538,"أتعاب محاماة":600,"فروقات إيجار":307,"رسوم التشغيل":50},"contract_counts":{"أونلاين":460,"تحويل بنكى":5,"شيك":75,"كي نت":21,"نقدا":0},"grand":1720194},"3":{"real":{"total":1000773,"due":{"03":844844,"02":61800,"01":25312,"b":14918,"05":18946,"04":19495,"08":1059,"07":1059,"06":13339}},"svc":{"total":19081,"due":{"03":18094,"02":707,"b":50,"01":231}},"ex":{"total":48963,"due":{"02":6182,"01":2124,"b":2988,"03":37669}},"lex":{"total":0,"due":{}},"chk":{"total":17910,"due":{"b":17910}},"ins":6578,"ins_tr":0,"court":0,"settle":0,"suspense":1950,"methods":{"أونلاين":{"total":701625,"due":{"03":658765,"02":40374,"04":549,"01":1936}},"تحويل بنكى":{"total":82090,"due":{"03":12749,"04":13589,"08":1059,"07":1059,"06":13339,"05":13589,"b":2400,"02":12959,"01":11347}},"شيك":{"total":174272,"due":{"03":163558,"05":5357,"04":5357}},"كي نت":{"total":42786,"due":{"03":9772,"01":12028,"02":8468,"b":12518}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":48963,"due":{"02":6182,"01":2124,"b":2988,"03":37669}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":1056,"due":{"03":1056}},"شيكات مؤجلة":{"total":17910,"due":{"b":17910}}},"svc_types":{"رسوم خدمات أخرى":5539,"رسوم نظافة":5152,"اشتراك كهرباء":4196,"مقابل فترة السماح":3000,"أتعاب محاماة":600,"فروقات إيجار":544,"رسوم التشغيل":50},"contract_counts":{"أونلاين":403,"تحويل بنكى":8,"شيك":36,"كي نت":17,"نقدا":0},"grand":1077229},"4":{"real":{"total":1243575,"due":{"04":862130,"03":180767,"02":38518,"b":33617,"01":38584,"05":59417,"06":23728,"a":1125,"12":375,"11":375,"10":375,"09":375,"08":375,"07":3814}},"svc":{"total":60205,"due":{"04":21992,"02":2803,"03":2566,"01":706,"b":1881,"05":30256}},"ex":{"total":104627,"due":{"03":14967,"b":5330,"01":1132,"02":5510,"04":77689}},"lex":{"total":0,"due":{}},"chk":{"total":55528,"due":{"b":22796,"03":14449,"02":12964,"04":2334,"01":2136,"05":849}},"ins":4526,"ins_tr":1940,"court":0,"settle":0,"suspense":4544,"methods":{"أونلاين":{"total":765295,"due":{"04":658004,"03":90414,"02":12759,"01":4118}},"تحويل بنكى":{"total":14981,"due":{"04":1987,"a":1125,"12":375,"11":375,"10":375,"09":375,"08":375,"07":375,"06":375,"05":375,"01":3309,"02":3309,"03":2251}},"شيك":{"total":381624,"due":{"04":187609,"03":75571,"05":58974,"06":23354,"02":5981,"b":11620,"01":15077,"07":3439}},"كي نت":{"total":81675,"due":{"02":16470,"04":14529,"b":21997,"01":16080,"03":12530,"05":68}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":104627,"due":{"03":14967,"b":5330,"01":1132,"02":5510,"04":77689}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":4193,"due":{"04":2830,"03":1362}},"شيكات مؤجلة":{"total":55528,"due":{"b":22796,"03":14449,"02":12964,"04":2334,"01":2136,"05":849}}},"svc_types":{"فروقات إيجار":32829,"رسوم خدمات أخرى":9387,"اشتراك كهرباء":7617,"رسوم نظافة":5094,"مقابل فترة السماح":2126,"أتعاب محاماة":1950,"رسوم قانونية":1015,"ايرادات أخرى":188},"contract_counts":{"أونلاين":437,"تحويل بنكى":5,"شيك":79,"كي نت":30,"نقدا":0},"grand":1418933},"5":{"real":{"total":1573127,"due":{"04":100416,"05":1113726,"03":77877,"02":50200,"07":105878,"06":109171,"b":6956,"01":8902}},"svc":{"total":53224,"due":{"05":45552,"04":1716,"03":4334,"02":1208,"b":346,"01":68}},"ex":{"total":74620,"due":{"05":59503,"04":5172,"b":2631,"01":1148,"02":3447,"03":2719}},"lex":{"total":602,"due":{"05":602}},"chk":{"total":118915,"due":{"01":9861,"02":9861,"03":12571,"04":64189,"b":7502,"05":14930}},"ins":45167,"ins_tr":1196,"court":0,"settle":0,"suspense":15430,"methods":{"أونلاين":{"total":739492,"due":{"04":46668,"05":684502,"02":872,"03":2886,"06":3293,"b":1270}},"تحويل بنكى":{"total":1612,"due":{"05":1612}},"شيك":{"total":758646,"due":{"05":411164,"02":44840,"03":50984,"07":105778,"06":105778,"04":35305,"01":4797}},"كي نت":{"total":70977,"due":{"05":16248,"03":23006,"04":17443,"b":5686,"02":4488,"01":4105}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":2400,"due":{"05":200,"03":1000,"04":1000,"06":100,"07":100}},"اعفاء":{"total":74017,"due":{"05":58901,"04":5172,"b":2631,"01":1148,"02":3447,"03":2719}},"إعفاء قانوني":{"total":602,"due":{"05":602}},"إعفاء إداري":{"total":1936,"due":{"04":1936}},"شيكات مؤجلة":{"total":118915,"due":{"01":9861,"02":9861,"03":12571,"04":64189,"b":7502,"05":14930}}},"svc_types":{"فروقات إيجار":21910,"ايرادات أخرى":12199,"اشتراك كهرباء":8149,"رسوم خدمات أخرى":6150,"رسوم نظافة":3616,"أتعاب محاماة":600,"مقابل فترة السماح":600},"contract_counts":{"أونلاين":417,"تحويل بنكى":2,"شيك":70,"كي نت":36,"نقدا":0},"grand":1830390},"6":{"real":{"total":335596,"due":{"06":229521,"04":9197,"05":55886,"03":5982,"02":3514,"07":31496}},"svc":{"total":4781,"due":{"05":2579,"04":216,"06":1912,"03":74}},"ex":{"total":176210,"due":{"06":169919,"05":6291}},"lex":{"total":1328,"due":{"06":1328}},"chk":{"total":3694,"due":{"03":180,"04":3514}},"ins":13,"ins_tr":1000,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":171796,"due":{"06":138220,"04":7793,"05":23975,"03":1808}},"تحويل بنكى":{"total":0,"due":{}},"شيك":{"total":153844,"due":{"06":90897,"05":31451,"07":31496}},"كي نت":{"total":9956,"due":{"06":405,"02":3514,"03":4173,"04":1404,"05":460}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":174882,"due":{"06":168592,"05":6291}},"إعفاء قانوني":{"total":1328,"due":{"06":1328}},"إعفاء إداري":{"total":0,"due":{}},"شيكات مؤجلة":{"total":3694,"due":{"03":180,"04":3514}}},"svc_types":{"فروقات إيجار":2022,"رسوم نظافة":1046,"رسوم خدمات أخرى":889,"اشتراك كهرباء":524,"أتعاب محاماة":300},"contract_counts":{"أونلاين":71,"تحويل بنكى":0,"شيك":20,"كي نت":3,"نقدا":0},"grand":516513},"all":{"real":{"total":7002576,"due":{"01":1165905,"03":1333984,"02":1357166,"b":209123,"04":1166358,"05":1247975,"08":1434,"07":142247,"06":375760,"a":1125,"12":375,"11":375,"10":375,"09":375}},"svc":{"total":191401,"due":{"01":25646,"b":11762,"02":23671,"03":25583,"04":24440,"05":78388,"06":1912}},"ex":{"total":535125,"due":{"b":40564,"01":38103,"02":57119,"03":68060,"04":95565,"05":65794,"06":169919}},"lex":{"total":2976,"due":{"b":1046,"05":602,"06":1328}},"chk":{"total":294755,"due":{"01":101310,"b":57603,"03":27200,"02":22825,"04":70037,"05":15780}},"ins":147635,"ins_tr":5456,"court":0,"settle":0,"suspense":56738,"methods":{"أونلاين":{"total":3915837,"due":{"01":791332,"b":32497,"02":775130,"03":753874,"04":713015,"05":708476,"06":141512}},"تحويل بنكى":{"total":200213,"due":{"01":48587,"03":46680,"02":48587,"b":5800,"04":15776,"08":1434,"07":1434,"06":13714,"05":15576,"a":1125,"12":375,"11":375,"10":375,"09":375}},"شيك":{"total":2594942,"due":{"01":281115,"03":482847,"02":488854,"b":71349,"04":403091,"05":506946,"06":220028,"07":140713}},"كي نت":{"total":288884,"due":{"b":99477,"01":44872,"02":44496,"03":49482,"04":33376,"05":16776,"06":405}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":2700,"due":{"03":1100,"04":1100,"02":100,"05":200,"06":100,"07":100}},"اعفاء":{"total":532148,"due":{"b":39518,"01":38103,"02":57119,"03":68060,"04":95565,"05":65191,"06":168592}},"إعفاء قانوني":{"total":2976,"due":{"b":1046,"05":602,"06":1328}},"إعفاء إداري":{"total":7186,"due":{"03":2418,"04":4767}},"شيكات مؤجلة":{"total":294755,"due":{"01":101310,"b":57603,"03":27200,"02":22825,"04":70037,"05":15780}}},"svc_types":{"فروقات إيجار":59473,"اشتراك كهرباء":38812,"رسوم خدمات أخرى":35832,"رسوم نظافة":29073,"ايرادات أخرى":14548,"مقابل فترة السماح":7048,"أتعاب محاماة":4650,"رسوم قانونية":1015,"رسوم زيادة احمال كهرباء":750,"رسوم التشغيل":200},"contract_counts":{"أونلاين":643,"تحويل بنكى":13,"شيك":133,"كي نت":84,"نقدا":0},"grand":8049470}},"3 - أسواق العارضية":{"1":{"real":{"total":593774,"due":{"01":487242,"03":1500,"02":1500,"b":103532}},"svc":{"total":6679,"due":{"01":5736,"b":943}},"ex":{"total":5950,"due":{"b":1310,"01":4640}},"lex":{"total":1050,"due":{"01":1050}},"chk":{"total":0,"due":{}},"ins":11738,"ins_tr":440,"court":0,"settle":0,"suspense":900,"methods":{"أونلاين":{"total":508950,"due":{"01":433038,"b":75913}},"تحويل بنكى":{"total":16465,"due":{"01":16465}},"شيك":{"total":54174,"due":{"01":36774,"03":1500,"02":1500,"b":14400}},"كي نت":{"total":12184,"due":{"b":11219,"01":965}},"نقدا":{"total":2000,"due":{"b":2000}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":4900,"due":{"b":1310,"01":3590}},"إعفاء قانوني":{"total":1050,"due":{"01":1050}},"إعفاء إداري":{"total":1838,"due":{"01":1838}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"اشتراك كهرباء":3665,"رسوم خدمات أخرى":1412,"رسوم نظافة":1302,"رسوم زيادة احمال كهرباء":300},"contract_counts":{"أونلاين":425,"تحويل بنكى":5,"شيك":19,"كي نت":8,"نقدا":1},"grand":614638},"2":{"real":{"total":560919,"due":{"b":11318,"01":72455,"02":477147}},"svc":{"total":6582,"due":{"b":872,"02":4898,"01":811}},"ex":{"total":3575,"due":{"02":1070,"01":1085,"b":1420}},"lex":{"total":2130,"due":{"b":1420,"02":355,"01":355}},"chk":{"total":1400,"due":{"01":1400}},"ins":6815,"ins_tr":840,"court":0,"settle":0,"suspense":6105,"methods":{"أونلاين":{"total":505914,"due":{"b":9202,"01":64245,"02":432466}},"تحويل بنكى":{"total":12225,"due":{"02":12225}},"شيك":{"total":39278,"due":{"02":32278,"01":7000}},"كي نت":{"total":3502,"due":{"b":2115,"01":1210,"02":178}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":1445,"due":{"02":715,"01":730}},"إعفاء قانوني":{"total":2130,"due":{"b":1420,"02":355,"01":355}},"إعفاء إداري":{"total":3302,"due":{"02":3302}},"شيكات مؤجلة":{"total":1400,"due":{"01":1400}}},"svc_types":{"اشتراك كهرباء":3562,"رسوم خدمات أخرى":1427,"رسوم نظافة":1043,"رسوم زيادة احمال كهرباء":550},"contract_counts":{"أونلاين":427,"تحويل بنكى":3,"شيك":16,"كي نت":4,"نقدا":0},"grand":582956},"3":{"real":{"total":561306,"due":{"02":70092,"03":474592,"b":9145,"01":7477}},"svc":{"total":11193,"due":{"b":200,"03":10612,"02":289,"01":92}},"ex":{"total":7955,"due":{"03":7315,"02":640}},"lex":{"total":3860,"due":{"03":3860}},"chk":{"total":2750,"due":{"03":250,"02":250,"05":250,"04":250,"01":250,"06":250,"11":250,"10":250,"09":250,"08":250,"07":250}},"ins":2790,"ins_tr":635,"court":0,"settle":0,"suspense":2750,"methods":{"أونلاين":{"total":490198,"due":{"02":61954,"03":420131,"01":6477,"b":1635}},"تحويل بنكى":{"total":15570,"due":{"03":15570}},"شيك":{"total":39278,"due":{"02":7000,"03":32278}},"كي نت":{"total":16260,"due":{"b":7510,"02":1138,"03":6612,"01":1000}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":4095,"due":{"03":3455,"02":640}},"إعفاء قانوني":{"total":3860,"due":{"03":3860}},"إعفاء إداري":{"total":2368,"due":{"03":2368}},"شيكات مؤجلة":{"total":2750,"due":{"03":250,"02":250,"05":250,"04":250,"01":250,"06":250,"11":250,"10":250,"09":250,"08":250,"07":250}}},"svc_types":{"اشتراك كهرباء":8733,"رسوم خدمات أخرى":1126,"رسوم نظافة":1034,"رسوم زيادة احمال كهرباء":300},"contract_counts":{"أونلاين":415,"تحويل بنكى":3,"شيك":16,"كي نت":7,"نقدا":0},"grand":580553},"4":{"real":{"total":607504,"due":{"04":482594,"02":27704,"03":65048,"05":1500,"06":1500,"01":17026,"b":12130}},"svc":{"total":6638,"due":{"04":4148,"03":381,"02":158,"01":1951}},"ex":{"total":1523,"due":{"04":1523}},"lex":{"total":0,"due":{}},"chk":{"total":16790,"due":{"b":5110,"02":4695,"01":4695,"03":1955,"04":335}},"ins":16640,"ins_tr":6000,"court":0,"settle":0,"suspense":9300,"methods":{"أونلاين":{"total":511536,"due":{"04":417091,"02":22697,"03":55104,"01":11085,"b":5560}},"تحويل بنكى":{"total":27176,"due":{"04":25225,"01":1951}},"شيك":{"total":49476,"due":{"05":1500,"04":35661,"06":1500,"03":8908,"02":1908}},"كي نت":{"total":19315,"due":{"b":6570,"01":3990,"02":3100,"03":1038,"04":4618}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":1523,"due":{"04":1523}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":750,"due":{"04":750}},"شيكات مؤجلة":{"total":16790,"due":{"b":5110,"02":4695,"01":4695,"03":1955,"04":335}}},"svc_types":{"اشتراك كهرباء":4291,"رسوم خدمات أخرى":1102,"رسوم نظافة":944,"رسوم زيادة احمال كهرباء":300,"ايرادات أخرى":1},"contract_counts":{"أونلاين":425,"تحويل بنكى":6,"شيك":18,"كي نت":9,"نقدا":0},"grand":658507},"5":{"real":{"total":549590,"due":{"05":461734,"04":54888,"03":20746,"02":4047,"06":1100,"01":3488,"b":412,"10":2525,"11":650}},"svc":{"total":7157,"due":{"05":4662,"03":20,"04":90,"02":97,"b":412,"10":1875}},"ex":{"total":18055,"due":{"05":8122,"04":4055,"03":5878}},"lex":{"total":3001,"due":{"05":3001}},"chk":{"total":0,"due":{}},"ins":10190,"ins_tr":4174,"court":0,"settle":0,"suspense":8800,"methods":{"أونلاين":{"total":487270,"due":{"05":411424,"04":53788,"03":14936,"02":2847,"06":1100,"10":2525,"11":650}},"تحويل بنكى":{"total":20050,"due":{"05":20050}},"شيك":{"total":27160,"due":{"05":27160}},"كي نت":{"total":12010,"due":{"03":5810,"02":1200,"01":3488,"b":412,"04":1100}},"نقدا":{"total":3100,"due":{"05":3100}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":15054,"due":{"05":5121,"04":4055,"03":5878}},"إعفاء قانوني":{"total":3001,"due":{"05":3001}},"إعفاء إداري":{"total":7989,"due":{"05":7989}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"رسوم زيادة احمال كهرباء":3525,"اشتراك كهرباء":2014,"رسوم خدمات أخرى":984,"رسوم نظافة":634},"contract_counts":{"أونلاين":415,"تحويل بنكى":4,"شيك":14,"كي نت":6,"نقدا":1},"grand":598799},"6":{"real":{"total":102835,"due":{"06":74025,"04":5330,"05":21090,"03":2390}},"svc":{"total":1150,"due":{"06":870,"05":98,"04":182}},"ex":{"total":5445,"due":{"06":5445}},"lex":{"total":0,"due":{}},"chk":{"total":0,"due":{}},"ins":0,"ins_tr":600,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":91390,"due":{"06":64970,"04":5330,"05":21090}},"تحويل بنكى":{"total":0,"due":{}},"شيك":{"total":9055,"due":{"06":9055}},"كي نت":{"total":2390,"due":{"03":2390}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":5445,"due":{"06":5445}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":632,"due":{"06":632}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"اشتراك كهرباء":460,"تكلفة اصلاحات":300,"رسوم زيادة احمال كهرباء":150,"رسوم نظافة":125,"رسوم خدمات أخرى":115},"contract_counts":{"أونلاين":68,"تحويل بنكى":0,"شيك":7,"كي نت":1,"نقدا":0},"grand":109512},"all":{"real":{"total":2975927,"due":{"01":587687,"03":564276,"02":580490,"b":136537,"04":542813,"05":484324,"06":76625,"10":2525,"11":650}},"svc":{"total":39399,"due":{"01":8590,"b":2428,"02":5442,"03":11013,"04":4421,"05":4760,"10":1875,"06":870}},"ex":{"total":42503,"due":{"b":2730,"01":5725,"02":1710,"03":13193,"04":5578,"05":8122,"06":5445}},"lex":{"total":10041,"due":{"01":1405,"b":1420,"02":355,"03":3860,"05":3001}},"chk":{"total":20940,"due":{"01":6345,"03":2205,"02":4945,"05":250,"04":585,"06":250,"11":250,"10":250,"09":250,"08":250,"07":250,"b":5110}},"ins":48172,"ins_tr":12689,"court":0,"settle":0,"suspense":27855,"methods":{"أونلاين":{"total":2595258,"due":{"01":514844,"b":92310,"02":519965,"03":490171,"04":476209,"05":432514,"06":66070,"10":2525,"11":650}},"تحويل بنكى":{"total":91487,"due":{"01":18416,"02":12225,"03":15570,"04":25225,"05":20050}},"شيك":{"total":218421,"due":{"01":43774,"03":42685,"02":42685,"b":14400,"05":28660,"04":35661,"06":10555}},"كي نت":{"total":65662,"due":{"b":27826,"01":10652,"02":5615,"03":15850,"04":5718}},"نقدا":{"total":5100,"due":{"b":2000,"05":3100}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":32462,"due":{"b":1310,"01":4320,"02":1355,"03":9333,"04":5578,"05":5121,"06":5445}},"إعفاء قانوني":{"total":10041,"due":{"01":1405,"b":1420,"02":355,"03":3860,"05":3001}},"إعفاء إداري":{"total":16878,"due":{"01":1838,"02":3302,"03":2368,"04":750,"05":7989,"06":632}},"شيكات مؤجلة":{"total":20940,"due":{"01":6345,"03":2205,"02":4945,"05":250,"04":585,"06":250,"11":250,"10":250,"09":250,"08":250,"07":250,"b":5110}}},"svc_types":{"اشتراك كهرباء":22725,"رسوم خدمات أخرى":6166,"رسوم زيادة احمال كهرباء":5125,"رسوم نظافة":5082,"تكلفة اصلاحات":300,"ايرادات أخرى":1},"contract_counts":{"أونلاين":539,"تحويل بنكى":8,"شيك":21,"كي نت":24,"نقدا":2},"grand":3144966}},"4 - العقارات السكنية":{"1":{"real":{"total":162759,"due":{"01":159089,"b":2770,"02":900}},"svc":{"total":1247,"due":{"01":1217,"b":30}},"ex":{"total":1850,"due":{"01":1850}},"lex":{"total":0,"due":{}},"chk":{"total":0,"due":{}},"ins":452,"ins_tr":0,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":68862,"due":{"01":68832,"b":30}},"تحويل بنكى":{"total":0,"due":{}},"شيك":{"total":74542,"due":{"01":74542}},"كي نت":{"total":19354,"due":{"b":2740,"01":15714,"02":900}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":1850,"due":{"01":1850}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":0,"due":{}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"ايرادات أخرى":659,"فروقات إيجار":443,"اشتراك كهرباء":145},"contract_counts":{"أونلاين":40,"تحويل بنكى":0,"شيك":13,"كي نت":37,"نقدا":0},"grand":165061},"2":{"real":{"total":124569,"due":{"02":119032,"01":1590,"b":2697,"03":1250}},"svc":{"total":945,"due":{"02":945}},"ex":{"total":2750,"due":{"02":2150,"b":300,"01":300}},"lex":{"total":0,"due":{}},"chk":{"total":0,"due":{}},"ins":0,"ins_tr":0,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":55950,"due":{"02":55550,"01":400}},"تحويل بنكى":{"total":0,"due":{}},"شيك":{"total":49156,"due":{"02":49156}},"كي نت":{"total":19462,"due":{"02":14326,"b":2697,"01":1190,"03":1250}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":2750,"due":{"02":2150,"b":300,"01":300}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":1475,"due":{"b":450,"02":725,"01":300}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"فروقات إيجار":443,"ايرادات أخرى":372,"أتعاب محاماة":100,"اشتراك كهرباء":30},"contract_counts":{"أونلاين":38,"تحويل بنكى":0,"شيك":8,"كي نت":37,"نقدا":0},"grand":128794},"3":{"real":{"total":517011,"due":{"03":142142,"02":104322,"b":154089,"01":115559,"04":900}},"svc":{"total":835,"due":{"03":835}},"ex":{"total":1000,"due":{"03":1000}},"lex":{"total":0,"due":{}},"chk":{"total":0,"due":{}},"ins":0,"ins_tr":0,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":52543,"due":{"03":51543,"02":1000}},"تحويل بنكى":{"total":129336,"due":{"02":39536,"b":45800,"01":44000}},"شيك":{"total":309940,"due":{"03":71656,"02":59386,"b":107338,"01":71559}},"كي نت":{"total":25193,"due":{"03":18943,"02":4400,"b":950,"04":900}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":1000,"due":{"03":1000}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":0,"due":{}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"فروقات إيجار":443,"ايرادات أخرى":362,"اشتراك كهرباء":30},"contract_counts":{"أونلاين":34,"تحويل بنكى":1,"شيك":11,"كي نت":39,"نقدا":0},"grand":518011},"4":{"real":{"total":175976,"due":{"04":136445,"b":3697,"03":14934,"06":4150,"02":14850,"01":1000,"05":900}},"svc":{"total":1530,"due":{"04":945,"02":292,"03":292}},"ex":{"total":4045,"due":{"04":3875,"03":170}},"lex":{"total":0,"due":{}},"chk":{"total":0,"due":{}},"ins":3600,"ins_tr":0,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":43415,"due":{"04":42500,"03":915}},"تحويل بنكى":{"total":6807,"due":{"02":4807,"b":1000,"01":1000}},"شيك":{"total":97384,"due":{"03":11149,"04":72592,"06":3600,"02":10042}},"كي نت":{"total":28370,"due":{"04":21353,"b":2697,"03":2870,"05":900,"06":550}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":4045,"due":{"04":3875,"03":170}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":2980,"due":{"04":2500,"03":480}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"ايرادات أخرى":956,"فروقات إيجار":443,"أتعاب محاماة":100,"اشتراك كهرباء":30},"contract_counts":{"أونلاين":30,"تحويل بنكى":3,"شيك":11,"كي نت":44,"نقدا":0},"grand":186601},"5":{"real":{"total":441720,"due":{"05":192112,"b":2697,"04":135226,"03":110552,"09":1133}},"svc":{"total":802,"due":{"05":473,"04":329}},"ex":{"total":50254,"due":{"05":5661,"03":7156,"02":37437}},"lex":{"total":0,"due":{}},"chk":{"total":0,"due":{}},"ins":1350,"ins_tr":0,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":48538,"due":{"05":43450,"04":4938,"03":150}},"تحويل بنكى":{"total":138000,"due":{"03":46000,"04":46000,"05":46000}},"شيك":{"total":231241,"due":{"05":86042,"03":64402,"04":80796}},"كي نت":{"total":23941,"due":{"05":16620,"b":2697,"04":3491,"09":1133}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":50254,"due":{"05":5661,"03":7156,"02":37437}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":0,"due":{}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"ايرادات أخرى":636,"أتعاب محاماة":100,"اشتراك كهرباء":66},"contract_counts":{"أونلاين":31,"تحويل بنكى":3,"شيك":11,"كي نت":34,"نقدا":0},"grand":493324},"6":{"real":{"total":55996,"due":{"06":46929,"05":9068}},"svc":{"total":400,"due":{"06":108,"05":292}},"ex":{"total":0,"due":{}},"lex":{"total":0,"due":{}},"chk":{"total":0,"due":{}},"ins":0,"ins_tr":350,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":12251,"due":{"06":12251}},"تحويل بنكى":{"total":0,"due":{}},"شيك":{"total":43746,"due":{"05":9068,"06":34678}},"كي نت":{"total":0,"due":{}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":0,"due":{}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":350,"due":{"06":350}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"ايرادات أخرى":370,"اشتراك كهرباء":30},"contract_counts":{"أونلاين":8,"تحويل بنكى":0,"شيك":3,"كي نت":0,"نقدا":0},"grand":56696},"all":{"real":{"total":1478031,"due":{"01":277238,"b":165950,"02":239103,"03":268878,"04":272571,"06":51079,"05":202079,"09":1133}},"svc":{"total":5759,"due":{"01":1217,"b":30,"02":1237,"03":1127,"04":1274,"05":766,"06":108}},"ex":{"total":59899,"due":{"01":2150,"02":39587,"b":300,"03":8326,"04":3875,"05":5661}},"lex":{"total":0,"due":{}},"chk":{"total":0,"due":{}},"ins":5402,"ins_tr":350,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":281558,"due":{"01":69232,"b":30,"02":56550,"03":52608,"04":47438,"05":43450,"06":12251}},"تحويل بنكى":{"total":274143,"due":{"02":44343,"b":46800,"01":45000,"03":46000,"04":46000,"05":46000}},"شيك":{"total":806008,"due":{"01":146102,"02":118584,"03":147208,"b":107338,"04":153389,"06":38278,"05":95110}},"كي نت":{"total":116321,"due":{"b":11781,"01":16904,"02":19626,"03":23063,"04":25744,"05":17520,"06":550,"09":1133}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":59899,"due":{"01":2150,"02":39587,"b":300,"03":8326,"04":3875,"05":5661}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":4805,"due":{"b":450,"02":725,"01":300,"04":2500,"03":480,"06":350}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"ايرادات أخرى":3354,"فروقات إيجار":1773,"اشتراك كهرباء":331,"أتعاب محاماة":300},"contract_counts":{"أونلاين":48,"تحويل بنكى":3,"شيك":16,"كي نت":62,"نقدا":0},"grand":1548487}},"5 - العقارات التجارية":{"1":{"real":{"total":145217,"due":{"01":105426,"b":16140,"02":23650}},"svc":{"total":3710,"due":{"01":975,"b":2735}},"ex":{"total":5150,"due":{"b":160,"01":4990}},"lex":{"total":0,"due":{}},"chk":{"total":0,"due":{}},"ins":0,"ins_tr":2950,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":23235,"due":{"01":12577,"b":10658}},"تحويل بنكى":{"total":69735,"due":{"01":45700,"b":385,"02":23650}},"شيك":{"total":50578,"due":{"b":3968,"01":46610}},"كي نت":{"total":470,"due":{"01":470}},"نقدا":{"total":1199,"due":{"b":1129,"01":70}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":5150,"due":{"b":160,"01":4990}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":22000,"due":{"01":22000}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"اشتراك كهرباء":1625,"مواقف سيارات ( باركن )":1193,"ايرادات أخرى":538,"رسوم نظافة":195,"رسوم تكييف":114,"رسوم إدارية":42,"فالية باركن":4},"contract_counts":{"أونلاين":26,"تحويل بنكى":2,"شيك":17,"كي نت":1,"نقدا":2},"grand":175317},"2":{"real":{"total":350264,"due":{"01":84743,"02":144105,"b":3162,"03":42571,"07":18921,"06":18921,"05":18921,"04":18921}},"svc":{"total":9170,"due":{"01":5227,"b":844,"02":3099}},"ex":{"total":180,"due":{"01":120,"02":60}},"lex":{"total":0,"due":{}},"chk":{"total":0,"due":{}},"ins":0,"ins_tr":0,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":20798,"due":{"02":11020,"01":9778}},"تحويل بنكى":{"total":23755,"due":{"03":23650,"01":105}},"شيك":{"total":297486,"due":{"01":70934,"b":3162,"02":128786,"03":18921,"07":18921,"06":18921,"05":18921,"04":18921}},"كي نت":{"total":7259,"due":{"01":2959,"02":4299}},"نقدا":{"total":966,"due":{"01":966}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":180,"due":{"01":120,"02":60}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":22000,"due":{"02":22000}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"ايرادات أخرى":5591,"اشتراك كهرباء":2052,"مواقف سيارات ( باركن )":1005,"رسوم نظافة":249,"رسوم تكييف":197,"رسوم إدارية":42,"تكلفة اصلاحات":35},"contract_counts":{"أونلاين":26,"تحويل بنكى":2,"شيك":17,"كي نت":3,"نقدا":1},"grand":372444},"3":{"real":{"total":165776,"due":{"02":16414,"03":122496,"01":2716,"b":500,"04":23650}},"svc":{"total":5725,"due":{"02":921,"03":3906,"01":398,"b":500}},"ex":{"total":74960,"due":{"03":72710,"02":2250}},"lex":{"total":0,"due":{}},"chk":{"total":0,"due":{}},"ins":1650,"ins_tr":0,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":22898,"due":{"02":10670,"03":11830,"01":398}},"تحويل بنكى":{"total":23650,"due":{"04":23650}},"شيك":{"total":112592,"due":{"02":5178,"03":107114,"b":300}},"كي نت":{"total":5222,"due":{"b":200,"01":2318,"03":2704}},"نقدا":{"total":1413,"due":{"02":566,"03":848}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":74960,"due":{"03":72710,"02":2250}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":22000,"due":{"03":22000}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"ايرادات أخرى":2755,"مواقف سيارات ( باركن )":1413,"اشتراك كهرباء":921,"اشتراك مياه":398,"رسوم نظافة":195,"رسوم إدارية":42},"contract_counts":{"أونلاين":28,"تحويل بنكى":1,"شيك":16,"كي نت":2,"نقدا":1},"grand":264386},"4":{"real":{"total":184277,"due":{"03":23910,"04":122459,"02":5399,"b":2997,"01":3197,"05":26314}},"svc":{"total":6888,"due":{"02":859,"04":4271,"03":1558,"01":200}},"ex":{"total":7400,"due":{"04":5692,"03":1708}},"lex":{"total":0,"due":{}},"chk":{"total":0,"due":{}},"ins":0,"ins_tr":0,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":20359,"due":{"03":9948,"04":9642,"02":770}},"تحويل بنكى":{"total":31877,"due":{"02":185,"04":2664,"03":2664,"05":26314,"01":50}},"شيك":{"total":127790,"due":{"04":106162,"02":4444,"b":2997,"03":11039,"01":3147}},"كي نت":{"total":4201,"due":{"03":260,"04":3941}},"نقدا":{"total":50,"due":{"04":50}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":7400,"due":{"04":5692,"03":1708}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":22000,"due":{"04":22000}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"ايرادات أخرى":3992,"اشتراك مياه":1368,"اشتراك كهرباء":1223,"رسوم نظافة":141,"رسوم تكييف":91,"رسوم إدارية":42,"مواقف سيارات ( باركن )":31},"contract_counts":{"أونلاين":28,"تحويل بنكى":3,"شيك":21,"كي نت":2,"نقدا":1},"grand":213677},"5":{"real":{"total":219025,"due":{"04":16910,"06":23960,"05":122745,"03":28775,"b":1462,"01":1612,"02":23562}},"svc":{"total":14738,"due":{"05":8318,"04":1522,"03":4647,"01":150,"02":100}},"ex":{"total":11658,"due":{"03":720,"05":9352,"04":1586}},"lex":{"total":0,"due":{}},"chk":{"total":0,"due":{}},"ins":0,"ins_tr":0,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":21356,"due":{"04":9402,"06":310,"05":11068,"02":300,"03":275}},"تحويل بنكى":{"total":67905,"due":{"03":22135,"02":22000,"04":120,"06":23650}},"شيك":{"total":121856,"due":{"05":105406,"04":5750,"03":6365,"b":1462,"01":1612,"02":1262}},"كي نت":{"total":6991,"due":{"04":720,"05":6271}},"نقدا":{"total":917,"due":{"04":917}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":11658,"due":{"03":720,"05":9352,"04":1586}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":0,"due":{}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"اشتراك مياه":6230,"ايرادات أخرى":5376,"اشتراك كهرباء":1890,"مواقف سيارات ( باركن )":958,"رسوم نظافة":141,"رسوم تكييف":101,"رسوم إدارية":42},"contract_counts":{"أونلاين":26,"تحويل بنكى":2,"شيك":18,"كي نت":4,"نقدا":1},"grand":230683},"6":{"real":{"total":17630,"due":{"05":10774,"06":4729,"04":2128}},"svc":{"total":2563,"due":{"06":2563}},"ex":{"total":1000,"due":{"04":550,"05":450}},"lex":{"total":0,"due":{}},"chk":{"total":0,"due":{}},"ins":0,"ins_tr":0,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":6934,"due":{"05":5424,"04":260,"06":1250}},"تحويل بنكى":{"total":0,"due":{}},"شيك":{"total":10696,"due":{"05":5350,"06":3479,"04":1868}},"كي نت":{"total":0,"due":{}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":1000,"due":{"04":550,"05":450}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":0,"due":{}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"اشتراك مياه":2563},"contract_counts":{"أونلاين":4,"تحويل بنكى":0,"شيك":7,"كي نت":0,"نقدا":0},"grand":18630},"all":{"real":{"total":1082189,"due":{"01":197694,"b":24261,"02":213129,"03":217753,"07":18921,"06":47610,"05":178754,"04":184067}},"svc":{"total":42794,"due":{"01":6950,"b":4079,"02":4979,"03":10111,"04":5793,"05":8318,"06":2563}},"ex":{"total":100348,"due":{"b":160,"01":5110,"02":2310,"03":75138,"04":7829,"05":9802}},"lex":{"total":0,"due":{}},"chk":{"total":0,"due":{}},"ins":1650,"ins_tr":2950,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":115580,"due":{"01":22753,"b":10658,"02":22760,"03":22052,"04":19304,"06":1560,"05":16492}},"تحويل بنكى":{"total":216922,"due":{"01":45855,"b":385,"02":45835,"03":48449,"04":26434,"05":26314,"06":23650}},"شيك":{"total":721000,"due":{"b":11889,"01":122303,"02":139669,"03":143439,"07":18921,"06":22400,"05":129676,"04":132701}},"كي نت":{"total":24142,"due":{"01":5747,"02":4299,"b":200,"03":2964,"04":4661,"05":6271}},"نقدا":{"total":4545,"due":{"b":1129,"01":1036,"02":566,"03":848,"04":967}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":100348,"due":{"b":160,"01":5110,"02":2310,"03":75138,"04":7829,"05":9802}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":88000,"due":{"01":22000,"02":22000,"03":22000,"04":22000}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"ايرادات أخرى":18252,"اشتراك مياه":10559,"اشتراك كهرباء":7711,"مواقف سيارات ( باركن )":4600,"رسوم نظافة":921,"رسوم تكييف":502,"رسوم إدارية":210,"تكلفة اصلاحات":35,"فالية باركن":4},"contract_counts":{"أونلاين":37,"تحويل بنكى":3,"شيك":26,"كي نت":8,"نقدا":3},"grand":1275137}},"8 - أملاك خاصة":{"1":{"real":{"total":18991,"due":{"b":2250,"01":16741}},"svc":{"total":401,"due":{"01":401}},"ex":{"total":200,"due":{"01":200}},"lex":{"total":0,"due":{}},"chk":{"total":0,"due":{}},"ins":0,"ins_tr":2750,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":17990,"due":{"b":1950,"01":16040}},"تحويل بنكى":{"total":0,"due":{}},"شيك":{"total":0,"due":{}},"كي نت":{"total":1001,"due":{"01":701,"b":300}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":200,"due":{"01":200}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":2750,"due":{"01":2750}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"اشتراك كهرباء":294,"اشتراك مياه":81,"تكلفة اصلاحات":25},"contract_counts":{"أونلاين":17,"تحويل بنكى":0,"شيك":0,"كي نت":2,"نقدا":0},"grand":24691},"2":{"real":{"total":21244,"due":{"01":7984,"b":1770,"02":11490}},"svc":{"total":334,"due":{"01":334}},"ex":{"total":0,"due":{}},"lex":{"total":0,"due":{}},"chk":{"total":0,"due":{}},"ins":3000,"ins_tr":0,"court":0,"settle":0,"suspense":3000,"methods":{"أونلاين":{"total":13774,"due":{"01":1984,"b":300,"02":11490}},"تحويل بنكى":{"total":0,"due":{}},"شيك":{"total":6000,"due":{"01":6000}},"كي نت":{"total":1470,"due":{"b":1470}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":0,"due":{}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":0,"due":{}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"اشتراك كهرباء":306,"اشتراك مياه":28},"contract_counts":{"أونلاين":16,"تحويل بنكى":0,"شيك":1,"كي نت":3,"نقدا":0},"grand":27244},"3":{"real":{"total":13777,"due":{"03":10411,"02":3247,"01":120}},"svc":{"total":287,"due":{"01":120,"02":47,"03":121}},"ex":{"total":675,"due":{"b":531,"01":144}},"lex":{"total":0,"due":{}},"chk":{"total":0,"due":{}},"ins":0,"ins_tr":800,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":13777,"due":{"03":10411,"02":3247,"01":120}},"تحويل بنكى":{"total":0,"due":{}},"شيك":{"total":0,"due":{}},"كي نت":{"total":0,"due":{}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":675,"due":{"b":531,"01":144}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":1121,"due":{"03":800,"01":321}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"اشتراك كهرباء":121,"اشتراك مياه":120,"رسوم إدارية":47},"contract_counts":{"أونلاين":17,"تحويل بنكى":0,"شيك":0,"كي نت":0,"نقدا":0},"grand":16373},"4":{"real":{"total":23831,"due":{"03":6660,"01":2182,"04":12490,"02":2500}},"svc":{"total":621,"due":{"01":362,"03":160,"04":100}},"ex":{"total":550,"due":{"02":200,"03":200,"04":150}},"lex":{"total":0,"due":{}},"chk":{"total":0,"due":{}},"ins":0,"ins_tr":0,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":21936,"due":{"03":6584,"01":362,"04":12490,"02":2500}},"تحويل بنكى":{"total":0,"due":{}},"شيك":{"total":0,"due":{}},"كي نت":{"total":1895,"due":{"01":1820,"03":75}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":550,"due":{"02":200,"03":200,"04":150}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":0,"due":{}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"اشتراك كهرباء":437,"اشتراك مياه":100,"رسوم إدارية":84},"contract_counts":{"أونلاين":19,"تحويل بنكى":0,"شيك":0,"كي نت":4,"نقدا":0},"grand":24381},"5":{"real":{"total":27945,"due":{"04":4855,"03":1800,"05":18340,"02":1900,"01":1050}},"svc":{"total":155,"due":{"05":100,"04":55}},"ex":{"total":1100,"due":{"04":550,"05":550}},"lex":{"total":0,"due":{}},"chk":{"total":0,"due":{}},"ins":0,"ins_tr":0,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":24440,"due":{"04":3500,"03":1800,"05":17040,"02":1050,"01":1050}},"تحويل بنكى":{"total":0,"due":{}},"شيك":{"total":0,"due":{}},"كي نت":{"total":3505,"due":{"02":850,"04":1355,"05":1300}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":1100,"due":{"04":550,"05":550}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":0,"due":{}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"اشتراك كهرباء":100,"رسوم إدارية":55},"contract_counts":{"أونلاين":17,"تحويل بنكى":0,"شيك":0,"كي نت":2,"نقدا":0},"grand":29045},"6":{"real":{"total":408,"due":{"06":408}},"svc":{"total":408,"due":{"06":408}},"ex":{"total":188,"due":{"05":188}},"lex":{"total":0,"due":{}},"chk":{"total":0,"due":{}},"ins":0,"ins_tr":0,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":408,"due":{"06":408}},"تحويل بنكى":{"total":0,"due":{}},"شيك":{"total":0,"due":{}},"كي نت":{"total":0,"due":{}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":188,"due":{"05":188}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":0,"due":{}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"اشتراك كهرباء":408},"contract_counts":{"أونلاين":1,"تحويل بنكى":0,"شيك":0,"كي نت":0,"نقدا":0},"grand":596},"all":{"real":{"total":106196,"due":{"b":4020,"01":28076,"02":19137,"03":18870,"04":17345,"05":18340,"06":408}},"svc":{"total":2206,"due":{"01":1216,"02":47,"03":280,"04":155,"05":100,"06":408}},"ex":{"total":2713,"due":{"01":344,"b":531,"02":200,"03":200,"04":700,"05":738}},"lex":{"total":0,"due":{}},"chk":{"total":0,"due":{}},"ins":3000,"ins_tr":3550,"court":0,"settle":0,"suspense":3000,"methods":{"أونلاين":{"total":92325,"due":{"b":2250,"01":19555,"02":18287,"03":18795,"04":15990,"05":17040,"06":408}},"تحويل بنكى":{"total":0,"due":{}},"شيك":{"total":6000,"due":{"01":6000}},"كي نت":{"total":7871,"due":{"01":2521,"b":1770,"03":75,"02":850,"04":1355,"05":1300}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":2713,"due":{"01":344,"b":531,"02":200,"03":200,"04":700,"05":738}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":3871,"due":{"01":3071,"03":800}},"شيكات مؤجلة":{"total":0,"due":{}}},"svc_types":{"اشتراك كهرباء":1667,"اشتراك مياه":329,"رسوم إدارية":186,"تكلفة اصلاحات":25},"contract_counts":{"أونلاين":27,"تحويل بنكى":0,"شيك":1,"كي نت":7,"نقدا":0},"grand":122330}},"all":{"1":{"real":{"total":2890796,"due":{"01":2401174,"03":76720,"02":136562,"b":274340,"04":2000}},"svc":{"total":55585,"due":{"01":41254,"b":13881,"03":225,"02":225}},"ex":{"total":80474,"due":{"b":31702,"01":43772,"02":5000}},"lex":{"total":1050,"due":{"01":1050}},"chk":{"total":98876,"due":{"b":11290,"01":87586}},"ins":106136,"ins_tr":15002,"court":0,"settle":3000,"suspense":40325,"methods":{"أونلاين":{"total":1846844,"due":{"01":1708782,"b":138061}},"تحويل بنكى":{"total":123810,"due":{"01":75215,"b":385,"02":35930,"03":12280}},"شيك":{"total":688648,"due":{"01":532066,"03":21414,"02":56708,"b":76460,"04":2000}},"كي نت":{"total":98893,"due":{"b":55978,"01":42015,"02":900}},"نقدا":{"total":3525,"due":{"b":3455,"01":70}},"مستحق من أطراف ذي صلة":{"total":129075,"due":{"01":43025,"03":43025,"02":43025}},"اعفاء":{"total":79424,"due":{"b":31702,"01":42722,"02":5000}},"إعفاء قانوني":{"total":1050,"due":{"01":1050}},"إعفاء إداري":{"total":160796,"due":{"01":97530,"02":63266}},"شيكات مؤجلة":{"total":98876,"due":{"b":11290,"01":87586}}},"svc_types":{"اشتراك كهرباء":23825,"رسوم نظافة":12299,"رسوم خدمات أخرى":8877,"ايرادات أخرى":3358,"فروقات إيجار":2306,"مقابل فترة السماح":1672,"مواقف سيارات ( باركن )":1193,"رسوم زيادة احمال كهرباء":1050,"أتعاب محاماة":600,"اشتراك مياه":121,"رسوم تكييف":114,"رسوم التشغيل":100,"رسوم إدارية":42,"تكلفة اصلاحات":25,"فالية باركن":4},"contract_counts":{"أونلاين":1308,"تحويل بنكى":9,"شيك":165,"كي نت":75,"نقدا":4},"grand":3395404},"2":{"real":{"total":3317740,"due":{"b":125701,"02":2428602,"01":278493,"04":192040,"03":236140,"07":18921,"06":18921,"05":18921}},"svc":{"total":49461,"due":{"b":2242,"02":36809,"01":9379,"03":516,"04":516}},"ex":{"total":161722,"due":{"b":62368,"02":56792,"01":17152,"03":12705,"04":12705}},"lex":{"total":3176,"due":{"b":2466,"02":355,"01":355}},"chk":{"total":10581,"due":{"01":5127,"02":2000,"b":3454}},"ins":28070,"ins_tr":9969,"court":0,"settle":0,"suspense":17996,"methods":{"أونلاين":{"total":1812474,"due":{"b":23861,"02":1640314,"01":148299}},"تحويل بنكى":{"total":100670,"due":{"02":32264,"01":21756,"03":43050,"b":3400,"04":200}},"شيك":{"total":1298850,"due":{"02":715168,"04":191740,"03":191740,"01":94863,"b":48576,"07":18921,"06":18921,"05":18921}},"كي نت":{"total":104479,"due":{"02":40755,"b":49865,"01":12609,"03":1250}},"نقدا":{"total":966,"due":{"01":966}},"مستحق من أطراف ذي صلة":{"total":300,"due":{"03":100,"04":100,"02":100}},"اعفاء":{"total":158546,"due":{"b":59902,"02":56437,"01":16798,"03":12705,"04":12705}},"إعفاء قانوني":{"total":3176,"due":{"b":2466,"02":355,"01":355}},"إعفاء إداري":{"total":44106,"due":{"b":1260,"02":42276,"01":570}},"شيكات مؤجلة":{"total":10581,"due":{"01":5127,"02":2000,"b":3454}}},"svc_types":{"اشتراك كهرباء":20630,"رسوم نظافة":11372,"رسوم خدمات أخرى":8101,"ايرادات أخرى":5962,"مواقف سيارات ( باركن )":1005,"فروقات إيجار":750,"أتعاب محاماة":700,"رسوم زيادة احمال كهرباء":550,"رسوم تكييف":197,"اشتراك مياه":68,"رسوم التشغيل":50,"رسوم إدارية":42,"تكلفة اصلاحات":35},"contract_counts":{"أونلاين":1289,"تحويل بنكى":10,"شيك":147,"كي نت":80,"نقدا":1},"grand":3590183},"3":{"real":{"total":3138761,"due":{"02":335031,"03":2166699,"b":219079,"01":195200,"05":68755,"04":93674,"06":58204,"08":1059,"07":1059}},"svc":{"total":74006,"due":{"03":68797,"02":2265,"b":1173,"01":916,"05":405,"04":225,"06":225}},"ex":{"total":145334,"due":{"03":129094,"02":9722,"01":2268,"b":4249}},"lex":{"total":14260,"due":{"03":14260}},"chk":{"total":29888,"due":{"03":3019,"02":1419,"05":250,"04":250,"01":1419,"06":250,"11":250,"10":250,"09":250,"08":250,"07":250,"b":22031}},"ins":13468,"ins_tr":9406,"court":4284,"settle":0,"suspense":7150,"methods":{"أونلاين":{"total":1711299,"due":{"02":158966,"03":1532533,"01":17338,"b":1912,"04":549}},"تحويل بنكى":{"total":256166,"due":{"03":28319,"02":52495,"b":48200,"01":55347,"04":39079,"06":15179,"05":15429,"08":1059,"07":1059}},"شيك":{"total":914567,"due":{"02":101204,"03":549631,"05":10121,"04":10121,"b":139784,"01":103705}},"كي نت":{"total":126060,"due":{"b":29182,"02":21801,"03":55367,"01":18810,"04":900}},"نقدا":{"total":1413,"due":{"02":566,"03":848}},"مستحق من أطراف ذي صلة":{"total":129255,"due":{"05":43205,"04":43025,"06":43025}},"اعفاء":{"total":131074,"due":{"03":114834,"02":9722,"01":2268,"b":4249}},"إعفاء قانوني":{"total":14260,"due":{"03":14260}},"إعفاء إداري":{"total":31044,"due":{"03":29924,"02":800,"01":321}},"شيكات مؤجلة":{"total":29888,"due":{"03":3019,"02":1419,"05":250,"04":250,"01":1419,"06":250,"11":250,"10":250,"09":250,"08":250,"07":250,"b":22031}}},"svc_types":{"اشتراك كهرباء":20713,"رسوم التشغيل":14050,"تكلفة اصلاحات":13000,"رسوم نظافة":9343,"رسوم خدمات أخرى":6877,"ايرادات أخرى":3117,"مقابل فترة السماح":3000,"مواقف سيارات ( باركن )":1413,"فروقات إيجار":987,"أتعاب محاماة":600,"اشتراك مياه":518,"رسوم زيادة احمال كهرباء":300,"رسوم إدارية":89},"contract_counts":{"أونلاين":1201,"تحويل بنكى":14,"شيك":110,"كي نت":80,"نقدا":1},"grand":3379335},"4":{"real":{"total":2934175,"due":{"04":2130934,"03":432290,"02":101110,"05":88506,"06":29754,"b":68878,"01":72139,"a":2625,"12":750,"11":750,"10":750,"09":750,"08":750,"07":4189}},"svc":{"total":85831,"due":{"04":39007,"02":4404,"01":3394,"03":5992,"b":2778,"05":30256}},"ex":{"total":130887,"due":{"03":19645,"04":99070,"b":5330,"01":1132,"02":5710}},"lex":{"total":0,"due":{}},"chk":{"total":99443,"due":{"b":42646,"03":20668,"02":21516,"01":9779,"04":3985,"05":849}},"ins":27152,"ins_tr":15570,"court":1000,"settle":0,"suspense":14594,"methods":{"أونلاين":{"total":1788280,"due":{"04":1497368,"03":214100,"02":46563,"01":24689,"b":5560}},"تحويل بنكى":{"total":114982,"due":{"04":59516,"02":8301,"b":1000,"01":6310,"a":2625,"12":750,"11":750,"10":750,"09":750,"08":750,"07":750,"06":750,"05":27064,"03":4915}},"شيك":{"total":845003,"due":{"04":516167,"05":60474,"06":28454,"03":181254,"02":22375,"b":14617,"01":18224,"07":3439}},"كي نت":{"total":185860,"due":{"02":23872,"04":57833,"b":47700,"01":22916,"03":32021,"05":968,"06":550}},"نقدا":{"total":50,"due":{"04":50}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":130887,"due":{"03":19645,"04":99070,"b":5330,"01":1132,"02":5710}},"إعفاء قانوني":{"total":0,"due":{}},"إعفاء إداري":{"total":30838,"due":{"04":28996,"03":1842}},"شيكات مؤجلة":{"total":99443,"due":{"b":42646,"03":20668,"02":21516,"01":9779,"04":3985,"05":849}}},"svc_types":{"فروقات إيجار":33272,"اشتراك كهرباء":19936,"رسوم خدمات أخرى":10731,"رسوم نظافة":9508,"ايرادات أخرى":5137,"مقابل فترة السماح":2126,"أتعاب محاماة":2050,"اشتراك مياه":1508,"رسوم قانونية":1015,"رسوم زيادة احمال كهرباء":300,"رسوم إدارية":126,"رسوم تكييف":91,"مواقف سيارات ( باركن )":31},"contract_counts":{"أونلاين":1237,"تحويل بنكى":19,"شيك":160,"كي نت":110,"نقدا":1},"grand":3253658},"5":{"real":{"total":3616534,"due":{"04":455591,"05":2499933,"03":268039,"06":134231,"02":101483,"07":105878,"b":17378,"01":29694,"10":2525,"11":650,"09":1133}},"svc":{"total":89009,"due":{"05":69013,"04":5188,"03":9551,"02":1905,"b":758,"01":718,"10":1875}},"ex":{"total":318107,"due":{"05":103048,"03":35564,"04":32876,"b":66900,"02":59727,"01":19991}},"lex":{"total":4374,"due":{"05":4374}},"chk":{"total":178793,"due":{"02":15657,"03":18367,"04":69985,"01":12461,"b":47292,"05":15030}},"ins":72387,"ins_tr":22757,"court":1170,"settle":0,"suspense":24594,"methods":{"أونلاين":{"total":1700265,"due":{"04":143724,"05":1520927,"03":20347,"06":4703,"02":5069,"10":2525,"11":650,"b":1270,"01":1050}},"تحويل بنكى":{"total":257207,"due":{"05":97302,"03":68135,"02":22000,"04":46120,"06":23650}},"شيك":{"total":1431706,"due":{"05":806559,"02":56844,"03":136494,"07":105778,"06":105778,"04":201640,"01":17151,"b":1462}},"كي نت":{"total":216938,"due":{"04":62190,"03":42063,"02":17570,"05":71845,"b":10646,"01":11492,"09":1133}},"نقدا":{"total":8017,"due":{"05":3100,"b":4000,"04":917}},"مستحق من أطراف ذي صلة":{"total":2400,"due":{"05":200,"03":1000,"04":1000,"06":100,"07":100}},"اعفاء":{"total":313733,"due":{"05":98675,"03":35564,"04":32876,"b":66900,"02":59727,"01":19991}},"إعفاء قانوني":{"total":4374,"due":{"05":4374}},"إعفاء إداري":{"total":13016,"due":{"04":2709,"05":8762,"03":772,"02":772}},"شيكات مؤجلة":{"total":178793,"due":{"02":15657,"03":18367,"04":69985,"01":12461,"b":47292,"05":15030}}},"svc_types":{"فروقات إيجار":23730,"اشتراك كهرباء":19887,"ايرادات أخرى":18210,"رسوم نظافة":7206,"رسوم خدمات أخرى":7166,"اشتراك مياه":6230,"رسوم زيادة احمال كهرباء":3525,"مواقف سيارات ( باركن )":958,"أتعاب محاماة":700,"رسوم إدارية":697,"مقابل فترة السماح":600,"رسوم تكييف":101},"contract_counts":{"أونلاين":1175,"تحويل بنكى":12,"شيك":147,"كي نت":130,"نقدا":3},"grand":4247358},"6":{"real":{"total":584520,"due":{"06":403174,"04":21702,"05":110082,"03":14552,"02":3514,"07":31496}},"svc":{"total":9696,"due":{"06":5915,"05":3279,"04":427,"03":74}},"ex":{"total":189541,"due":{"06":182063,"04":550,"05":6928}},"lex":{"total":2675,"due":{"06":2675}},"chk":{"total":6595,"due":{"03":1147,"04":4481,"05":967}},"ins":13,"ins_tr":7985,"court":0,"settle":0,"suspense":0,"methods":{"أونلاين":{"total":343308,"due":{"06":264660,"04":13383,"05":63456,"03":1808}},"تحويل بنكى":{"total":0,"due":{}},"شيك":{"total":217341,"due":{"06":138109,"05":45868,"04":1868,"07":31496}},"كي نت":{"total":23871,"due":{"04":6451,"03":12743,"06":405,"02":3514,"05":758}},"نقدا":{"total":0,"due":{}},"مستحق من أطراف ذي صلة":{"total":0,"due":{}},"اعفاء":{"total":186866,"due":{"06":179388,"04":550,"05":6928}},"إعفاء قانوني":{"total":2675,"due":{"06":2675}},"إعفاء إداري":{"total":982,"due":{"06":982}},"شيكات مؤجلة":{"total":6595,"due":{"03":1147,"04":4481,"05":967}}},"svc_types":{"اشتراك مياه":2563,"فروقات إيجار":2022,"اشتراك كهرباء":1712,"رسوم نظافة":1275,"رسوم خدمات أخرى":1004,"ايرادات أخرى":370,"أتعاب محاماة":300,"تكلفة اصلاحات":300,"رسوم زيادة احمال كهرباء":150},"contract_counts":{"أونلاين":185,"تحويل بنكى":0,"شيك":37,"كي نت":9,"نقدا":0},"grand":789636},"all":{"real":{"total":16482524,"due":{"01":2976700,"03":3194439,"02":3106303,"b":705375,"04":2895941,"07":161543,"06":644283,"05":2786197,"08":1809,"a":2625,"12":750,"11":1400,"10":3275,"09":1883}},"svc":{"total":363588,"due":{"01":55661,"b":20831,"03":85155,"02":45607,"04":45363,"05":102954,"06":6140,"10":1875}},"ex":{"total":1026065,"due":{"b":170550,"01":84316,"02":136950,"03":197008,"04":145202,"05":109977,"06":182063}},"lex":{"total":25535,"due":{"01":1405,"b":2466,"02":355,"03":14260,"05":4374,"06":2675}},"chk":{"total":424177,"due":{"b":126714,"01":116372,"02":40592,"03":43201,"05":17096,"04":78701,"06":250,"11":250,"10":250,"09":250,"08":250,"07":250}},"ins":247226,"ins_tr":80688,"court":6454,"settle":3000,"suspense":104658,"methods":{"أونلاين":{"total":9202470,"due":{"01":1900158,"b":170665,"02":1850912,"03":1768789,"04":1655024,"05":1584383,"06":269363,"10":2525,"11":650}},"تحويل بنكى":{"total":852835,"due":{"01":158628,"b":52985,"02":150990,"03":156699,"04":144915,"06":39579,"05":139795,"08":1809,"07":1809,"a":2625,"12":750,"11":750,"10":750,"09":750}},"شيك":{"total":5396116,"due":{"01":766010,"03":1080534,"02":952298,"b":280900,"04":923536,"07":159634,"06":291261,"05":941943}},"كي نت":{"total":756102,"due":{"b":193371,"01":107843,"02":108412,"03":143444,"04":127374,"05":73571,"06":955,"09":1133}},"نقدا":{"total":13972,"due":{"b":7455,"01":1036,"02":566,"03":848,"04":967,"05":3100}},"مستحق من أطراف ذي صلة":{"total":261030,"due":{"01":43025,"03":44125,"02":43125,"04":44125,"05":43405,"06":43125,"07":100}},"اعفاء":{"total":1000530,"due":{"b":168083,"01":82911,"02":136595,"03":182748,"04":145202,"05":105603,"06":179388}},"إعفاء قانوني":{"total":25535,"due":{"01":1405,"b":2466,"02":355,"03":14260,"05":4374,"06":2675}},"إعفاء إداري":{"total":280783,"due":{"01":98420,"02":107115,"b":1260,"03":32538,"04":31705,"05":8762,"06":982}},"شيكات مؤجلة":{"total":424177,"due":{"b":126714,"01":116372,"02":40592,"03":43201,"05":17096,"04":78701,"06":250,"11":250,"10":250,"09":250,"08":250,"07":250}}},"svc_types":{"اشتراك كهرباء":106701,"فروقات إيجار":63067,"رسوم نظافة":51002,"رسوم خدمات أخرى":42755,"ايرادات أخرى":36155,"رسوم التشغيل":14200,"تكلفة اصلاحات":13360,"اشتراك مياه":11008,"مقابل فترة السماح":7398,"رسوم زيادة احمال كهرباء":5875,"أتعاب محاماة":4950,"مواقف سيارات ( باركن )":4600,"رسوم قانونية":1015,"رسوم إدارية":996,"رسوم تكييف":502,"فالية باركن":4},"contract_counts":{"أونلاين":1697,"تحويل بنكى":31,"شيك":254,"كي نت":261,"نقدا":7},"grand":18655575}}};
+
+const PORTS=['1 - أسواق القرين','2 - مجمعات العقيلة','3 - أسواق العارضية','4 - العقارات السكنية','5 - العقارات التجارية','8 - أملاك خاصة'];
+const SHORTS=['القرين','العقيلة','العارضية','السكني','التجاري','الخاص'];
+const MONTH_NAMES={1:'يناير',2:'فبراير',3:'مارس',4:'أبريل',5:'مايو',6:'3 يونيو'};
+const METHODS_SHOW=['أونلاين','تحويل بنكى','شيك','كي نت','نقدا','مستحق من أطراف ذي صلة','اعفاء','إعفاء قانوني','إعفاء إداري','شيكات مؤجلة'];
+
+const C={gold:'#c9a84c',teal:'#2dd4bf',blue:'#6366f1',green:'#4ade80',red:'#f87171',orange:'#fb923c',purple:'#a78bfa',blue2:'#818cf8',pink:'#f472b6'};
+const PAL=[C.gold,C.teal,C.blue2,C.green,C.orange,C.purple];
+const BS={x:{ticks:{color:'#64748b',font:{family:'Cairo',size:10}},grid:{display:false}},y:{display:false,ticks:{display:false},grid:{display:false}}};
+const BO={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#475569',font:{family:'Cairo',size:11}}}},layout:{padding:{top:24}}};
+
+Chart.register({id:'topLbls',afterDatasetsDraw(chart){
+  const{ctx,config}=chart;
+  const isHoriz=config.options&&config.options.indexAxis==='y';
+  if(config.type==='doughnut'||config.type==='pie')return;
+  chart.data.datasets.forEach((ds,di)=>{
+    const meta=chart.getDatasetMeta(di);
+    if(meta.hidden)return;
+    meta.data.forEach((bar,i)=>{
+      const v=ds.data[i];if(!v||v===0)return;
+      const lb=Math.abs(v)>=1000000?(v/1000000).toFixed(1)+'M':Math.abs(v)>=1000?(v/1000).toFixed(0)+'K':Math.round(v).toLocaleString();
+      ctx.save();ctx.font='bold 11px Cairo';ctx.fillStyle='#1e293b';
+      if(isHoriz){ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(lb,bar.x+5,bar.y);}
+      else{ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(lb,bar.x,bar.y-4);}
+      ctx.restore();
+    });
+  });
+}});
+
+function fmt(n){if(!n&&n!==0)return'—';const a=Math.abs(n);if(a>=1000000)return(n/1000000).toFixed(2)+'M';if(a>=1000)return(n/1000).toFixed(1)+'K';return Math.round(n).toLocaleString('ar')}
+function fmtF(n){if(!n&&n!==0)return'—';return Math.round(n).toLocaleString('ar')}
+function pct(a,b){return b?((a/b)*100).toFixed(1)+'%':'0%'}
+
+let selMonths=['all'], selPort='all', chartReg={};
+
+function destroyAll(){Object.values(chartReg).forEach(c=>{try{c.destroy()}catch(e){}});chartReg={};}
+
+// Get scope = list of selected month numbers (1..6). If 'all' selected, use all available months.
+function getScope(){
+  if(selMonths.length===1&&selMonths[0]==='all')return[1,2,3,4,5,6];
+  return selMonths.filter(x=>x!=='all').sort((a,b)=>a-b);
+}
+
+// Compute {total, pre, curr, adv} from a due bucket object using current scope.
+// due bucket: {b: pre_2026, "01"..."12": that_month_2026, a: after_2026}
+function applyScope(dueObj,scope){
+  if(!dueObj)return{total:0,pre:0,curr:0,adv:0};
+  const minS=Math.min(...scope);
+  let pre=dueObj.b||0,curr=0,adv=dueObj.a||0;
+  for(let m=1;m<=12;m++){
+    const v=dueObj[String(m).padStart(2,'0')]||0;
+    if(m<minS)pre+=v;
+    else if(scope.includes(m))curr+=v;
+    else adv+=v;
+  }
+  return{total:pre+curr+adv,pre:Math.round(pre),curr:Math.round(curr),adv:Math.round(adv)};
+}
+
+// Aggregate raw per-month data into a single working object (sums due buckets element-wise)
+function aggMonths(pk,months){
+  const agg={real:{total:0,due:{}},svc:{total:0,due:{}},ex:{total:0,due:{}},lex:{total:0,due:{}},chk:{total:0,due:{}},ins:0,ins_tr:0,court:0,settle:0,suspense:0,grand:0,methods:{},svc_types:{},contract_counts:{}};
+  METHODS_SHOW.forEach(m=>{agg.methods[m]={total:0,due:{}}});
+  function mergeDue(target,src){if(src)Object.entries(src).forEach(([k,v])=>target[k]=(target[k]||0)+v);}
+  for(const mo of months){
+    const d=RAWDATA[pk][String(mo)];if(!d)continue;
+    ['real','svc','ex','lex','chk'].forEach(key=>{agg[key].total+=(d[key].total||0);mergeDue(agg[key].due,d[key].due);});
+    agg.ins+=(d.ins||0);agg.ins_tr+=(d.ins_tr||0);agg.court+=(d.court||0);agg.settle+=(d.settle||0);agg.suspense+=(d.suspense||0);agg.grand+=(d.grand||0);
+    METHODS_SHOW.forEach(m=>{if(d.methods&&d.methods[m]){agg.methods[m].total+=(d.methods[m].total||0);mergeDue(agg.methods[m].due,d.methods[m].due);}});
+    Object.entries(d.svc_types||{}).forEach(([k,v])=>agg.svc_types[k]=(agg.svc_types[k]||0)+v);
+    Object.entries(d.contract_counts||{}).forEach(([k,v])=>agg.contract_counts[k]=(agg.contract_counts[k]||0)+v);
+  }
+  return agg;
+}
+
+// Resolve raw data (single month, 'all', or aggregated multi-month) for a port
+function rawFor(pk){
+  if(selMonths.length===1&&selMonths[0]==='all')return RAWDATA[pk]['all'];
+  if(selMonths.length===1)return RAWDATA[pk][String(selMonths[0])];
+  return aggMonths(pk,selMonths.filter(x=>x!=='all'));
+}
+
+// Get the data with pre/curr/adv applied for current selection
+function getD(){
+  const pk=selPort==='all'?'all':selPort;
+  const raw=rawFor(pk);
+  const scope=getScope();
+  // Apply scope to every due-based field
+  const d={...raw};
+  d.real=Object.assign({total:raw.real.total},applyScope(raw.real.due,scope));d.real.total=raw.real.total;
+  d.svc=Object.assign({total:raw.svc.total},applyScope(raw.svc.due,scope));d.svc.total=raw.svc.total;
+  d.ex=Object.assign({total:raw.ex.total},applyScope(raw.ex.due,scope));d.ex.total=raw.ex.total;
+  d.lex=Object.assign({total:raw.lex.total},applyScope(raw.lex.due,scope));d.lex.total=raw.lex.total;
+  d.chk=Object.assign({total:raw.chk.total},applyScope(raw.chk.due,scope));d.chk.total=raw.chk.total;
+  d.methods={};
+  METHODS_SHOW.forEach(m=>{
+    const md=raw.methods[m]||{total:0,due:{}};
+    d.methods[m]=Object.assign({total:md.total},applyScope(md.due,scope));
+  });
+  return d;
+}
+
+function aggForPort(port){
+  const raw=rawFor(port);
+  const scope=getScope();
+  const d={...raw};
+  d.real=Object.assign({total:raw.real.total},applyScope(raw.real.due,scope));d.real.total=raw.real.total;
+  d.svc=Object.assign({total:raw.svc.total},applyScope(raw.svc.due,scope));d.svc.total=raw.svc.total;
+  d.ex=Object.assign({total:raw.ex.total},applyScope(raw.ex.due,scope));d.ex.total=raw.ex.total;
+  d.lex=Object.assign({total:raw.lex.total},applyScope(raw.lex.due,scope));d.lex.total=raw.lex.total;
+  d.chk=Object.assign({total:raw.chk.total},applyScope(raw.chk.due,scope));d.chk.total=raw.chk.total;
+  return d;
+}
+
+function getMonthLabel(){
+  if(selMonths.length===1&&selMonths[0]==='all')return'يناير — 3 يونيو 2026';
+  if(selMonths.length===1)return MONTH_NAMES[selMonths[0]]+' 2026';
+  return selMonths.map(m=>MONTH_NAMES[m]).join(' + ')+' 2026';
+}
+
+function T(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
+
+function updateKPIs(d){
+  T('kv-real',fmt(d.real.total));
+  T('kv-real-pre',fmt(d.real.pre));
+  T('kv-real-curr',fmt(d.real.curr));
+  T('kv-real-adv',fmt(d.real.adv));
+  T('kv-svc',fmt(d.svc.total));
+  T('kv-svc-pre',fmt(d.svc.pre));
+  T('kv-svc-curr',fmt(d.svc.curr));
+  T('kv-svc-adv',fmt(d.svc.adv));
+  T('kv-ex',fmt(d.ex.total));
+  T('kv-ex-pre',fmt(d.ex.pre));
+  T('kv-ex-curr',fmt(d.ex.curr));
+  T('kv-ex-adv',fmt(d.ex.adv));
+  T('kv-lex',fmt(d.lex.total));
+  T('kv-lex-pre',fmt(d.lex.pre));
+  T('kv-lex-curr',fmt(d.lex.curr));
+  T('kv-lex-adv',fmt(d.lex.adv));
+  const ep=d.real.total>0?((d.ex.total/d.real.total)*100).toFixed(1)+'%':'0%';
+  T('kv-expt',ep);
+  T('kv-chk',fmt(d.chk.total));
+  T('kv-chk-pre',fmt(d.chk.pre));
+  T('kv-chk-curr',fmt(d.chk.curr));
+  T('kv-chk-adv',fmt(d.chk.adv));
+  T('kv-ins',fmt(d.ins));
+  T('kpi-sub-label',getMonthLabel());
+  document.getElementById('period-label').textContent=getMonthLabel();
+  const pLbl=selPort==='all'?'جميع المحافظ':SHORTS[PORTS.indexOf(selPort)];
+  document.getElementById('view-label').textContent=pLbl+' — '+getMonthLabel();
+}
+
+function updateTable(d){
+  // Grand total = sum of all 10 methods (with breakdown) + 5 total-only items = Excel total
+  const methodsTotal=Object.values(d.methods||{}).reduce((s,m)=>s+(m.total||0),0);
+  const grandTotal=methodsTotal+(d.suspense||0)+(d.ins_tr||0)+(d.court||0)+(d.settle||0)+(d.ins||0)||1;
+  // NEW: contract-based percentage logic for 5 cash methods only
+  const PCT_METHODS=['أونلاين','تحويل بنكى','شيك','كي نت','نقدا'];
+  const cc=d.contract_counts||{};
+  const ccTotal=PCT_METHODS.reduce((s,m)=>s+(cc[m]||0),0)||1;
+  let rows='',totT=0,totP=0,totC=0,totA=0;
+  // 10 methods with full breakdown
+  METHODS_SHOW.forEach(m=>{
+    const v=(d.methods||{})[m]||{total:0,pre:0,curr:0,adv:0};
+    if(!v.total)return;
+    totT+=v.total;totP+=v.pre||0;totC+=v.curr||0;totA+=v.adv||0;
+    // Show contract-based percentage for PCT_METHODS, dash for others
+    let pctCell;
+    if(PCT_METHODS.includes(m)){
+      const cnt=cc[m]||0;
+      const p=ccTotal?((cnt/ccTotal)*100).toFixed(1)+'%':'0%';
+      pctCell=`<td style="color:var(--gold2);font-weight:700" title="${cnt} عقد فريد">${p}</td>`;
+    } else {
+      pctCell=`<td style="color:var(--text3)">—</td>`;
+    }
+    rows+=`<tr><td>${m}</td><td><span class="n t">${fmtF(v.total)}</span></td><td><span class="n p">${fmtF(v.pre)}</span></td><td><span class="n c">${fmtF(v.curr)}</span></td><td><span class="n a">${fmtF(v.adv)}</span></td>${pctCell}</tr>`;
+  });
+  // 5 total-only rows: value in الإجمالي column, dash in others
+  function addTotalRow(label,val){
+    if(!val)return'';
+    totT+=val;
+    return`<tr><td>${label}</td><td><span class="n t">${fmtF(val)}</span></td><td style="color:var(--text3)">—</td><td style="color:var(--text3)">—</td><td style="color:var(--text3)">—</td><td style="color:var(--text3)">—</td></tr>`;
+  }
+  rows+=addTotalRow('💼 تحويل من دفعة تحت الحساب',d.suspense);
+  rows+=addTotalRow('🔄 تحويل تأمين لإيجار',d.ins_tr);
+  rows+=addTotalRow('⚖️ إيداعات بالمحكمة',d.court);
+  rows+=addTotalRow('🤝 تسويات',d.settle);
+  rows+=addTotalRow('🛡️ تأمين محصل',d.ins);
+  document.getElementById('methods-tbody').innerHTML=rows;
+  document.getElementById('tbl-tot').innerHTML=`<span class="n t">${fmtF(totT)}</span>`;
+  document.getElementById('tbl-pre').innerHTML=`<span class="n p">${fmtF(totP)}</span>`;
+  document.getElementById('tbl-curr').innerHTML=`<span class="n c">${fmtF(totC)}</span>`;
+  document.getElementById('tbl-adv').innerHTML=`<span class="n a">${fmtF(totA)}</span>`;
+}
+
+function updatePeriodBars(d){
+  const items=[
+    {lbl:'متأخرات',val:d.real.pre,color:C.orange},
+    {lbl:'حالي',val:d.real.curr,color:C.teal},
+    {lbl:'مقدم',val:d.real.adv,color:C.purple},
+  ];
+  const maxV=Math.max(...items.map(i=>i.val),1);
+  document.getElementById('period-bars').innerHTML=items.map(it=>{
+    const w=Math.round(it.val/maxV*100);
+    return`<div class="cmp-bar-row">
+      <div class="cmp-bar-lbl">${it.lbl}</div>
+      <div class="cmp-bar-wrap"><div class="cmp-bar-fill" style="width:${w}%;background:${it.color}"></div></div>
+      <div class="cmp-bar-val" style="color:${it.color}">${fmt(it.val)}</div>
+    </div>`;
+  }).join('');
+}
+
+function rebuildCharts(d,isAll){
+  destroyAll();
+
+  // Donut
+  // Donut — use real (matches KPI card exactly: based on selected period)
+  const pre=d.real.pre,curr=d.real.curr,adv=d.real.adv,gt=pre+curr+adv||1;
+  chartReg['donut']=new Chart(document.getElementById('ch-donut'),{
+    type:'doughnut',
+    data:{labels:[`متأخرات (${(pre/gt*100).toFixed(1)}%)`,`حالي (${(curr/gt*100).toFixed(1)}%)`,`مقدم (${(adv/gt*100).toFixed(1)}%)`],
+      datasets:[{data:[pre,curr,adv],backgroundColor:[C.orange+'cc',C.teal+'cc',C.purple+'cc'],borderColor:[C.orange,C.teal,C.purple],borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom',labels:{color:'#475569',font:{family:'Cairo',size:10},padding:8}},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)+' دك'}}}}
+  });
+
+  // Methods bar
+  const mL=['تحصيل فعلي','إعفاء','إعفاء إداري','إعفاء قانوني','شيكات مؤجلة','تأمين'];
+  const mV=[d.real.total,(d.methods['اعفاء']||{total:0}).total,(d.methods['إعفاء إداري']||{total:0}).total,d.lex.total,d.chk.total,d.ins];
+  const mC=[C.gold,C.teal,C.blue2,C.purple,C.orange,C.pink];
+  chartReg['methods']=new Chart(document.getElementById('ch-methods'),{
+    type:'bar',
+    data:{labels:mL,datasets:[{data:mV,backgroundColor:mC.map(c=>c+'bb'),borderColor:mC,borderWidth:1.5,borderRadius:5}]},
+    options:{...BO,indexAxis:'y',plugins:{...BO.plugins,legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)+' دك'}}},
+      layout:{padding:{top:4,right:60}},scales:{x:{display:false,grid:{display:false}},y:{display:true,ticks:{display:true,color:'#475569',font:{family:'Cairo',size:10}},grid:{display:false}}}}
+  });
+
+  // Services bar
+  const allSvcTypes=Object.entries(d.svc_types||{}).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  const svcTypes=allSvcTypes.slice(0,10);
+  const svcTitleSuffix=allSvcTypes.length>10?' — أعلى 10':'';
+  const svcTitleEl=document.getElementById('svc-title');
+  if(svcTitleEl)svcTitleEl.innerHTML=`تحصيل الخدمات حسب النوع${svcTitleSuffix} <span class="badge">دك</span>`;
+  const svcH=Math.max(180,svcTypes.length*34+60);
+  document.getElementById('ch-svc-wrap').style.height=svcH+'px';
+  if(svcTypes.length){
+    chartReg['svc']=new Chart(document.getElementById('ch-svc'),{
+      type:'bar',
+      data:{labels:svcTypes.map(t=>t[0]),datasets:[{data:svcTypes.map(t=>t[1]),backgroundColor:C.blue2+'99',borderColor:C.blue2,borderWidth:1.5,borderRadius:5}]},
+      options:{...BO,indexAxis:'y',plugins:{...BO.plugins,legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmtF(ctx.raw)+' دك'}}},
+        layout:{padding:{top:4,right:60}},scales:{x:{display:false,grid:{display:false}},y:{display:true,ticks:{display:true,color:'#475569',font:{family:'Cairo',size:10}},grid:{display:false}}}}
+    });
+  }
+
+  // Compare charts
+  document.getElementById('compare-sec').style.display=isAll?'block':'none';
+  if(isAll){
+    const portData=PORTS.map(p=>aggForPort(p));
+    function mkBar(id,vals){
+      chartReg[id]=new Chart(document.getElementById(id),{
+        type:'bar',
+        data:{labels:SHORTS,datasets:[{data:vals,backgroundColor:PAL.map(c=>c+'99'),borderColor:PAL,borderWidth:2,borderRadius:6}]},
+        options:{...BO,plugins:{...BO.plugins,legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)+' دك'}}},scales:{x:{...BS.x},y:{display:false,grid:{display:false}}}}
+      });
+    }
+    mkBar('cmp-real',portData.map(d=>d?d.real.total:0));
+    mkBar('cmp-chk',portData.map(d=>d?d.chk.total:0));
+    mkBar('cmp-ex',portData.map(d=>d?(d.ex.total-d.lex.total):0));
+    mkBar('cmp-lex',portData.map(d=>d?d.lex.total:0));
+    mkBar('cmp-svc',portData.map(d=>d?d.svc.total:0));
+    chartReg['cmp-stacked']=new Chart(document.getElementById('cmp-stacked'),{
+      type:'bar',
+      data:{labels:SHORTS,datasets:[
+        {label:'متأخرات',data:portData.map(d=>d?d.real.pre:0),backgroundColor:C.orange+'cc',borderColor:C.orange,borderWidth:1.5,borderRadius:4},
+        {label:'حالي',data:portData.map(d=>d?d.real.curr:0),backgroundColor:C.teal+'cc',borderColor:C.teal,borderWidth:1.5,borderRadius:4},
+        {label:'مقدم',data:portData.map(d=>d?d.real.adv:0),backgroundColor:C.purple+'cc',borderColor:C.purple,borderWidth:1.5,borderRadius:4}
+      ]},
+      options:{...BO,plugins:{...BO.plugins,legend:{display:true,position:'top',labels:{color:'#475569',font:{family:'Cairo',size:11},padding:12,boxWidth:14,boxHeight:14}},tooltip:{callbacks:{label:ctx=>' '+ctx.dataset.label+': '+fmt(ctx.raw)+' دك'}}},scales:{x:{...BS.x},y:{display:false,grid:{display:false}}}}
+    });
+  }
+}
+
+function render(){
+  const d=getD();
+  if(!d)return;
+  const isAll=selPort==='all';
+  updateKPIs(d);
+  updateTable(d);
+  updatePeriodBars(d);
+  rebuildCharts(d,isAll);
+}
+
+function toggleMonth(m,btn){
+  if(m==='all'){
+    selMonths=['all'];
+    document.querySelectorAll('#month-pills .pill').forEach(b=>b.classList.remove('active','active-all'));
+    btn.classList.add('active-all');
+  } else {
+    const allBtn=document.querySelector('#month-pills .pill');
+    if(allBtn)allBtn.classList.remove('active','active-all');
+    const idx=selMonths.indexOf(m);
+    if(selMonths[0]==='all')selMonths=[];
+    if(idx>=0){selMonths.splice(idx,1);btn.classList.remove('active');}
+    else{selMonths.push(m);btn.classList.add('active');}
+    if(!selMonths.length){
+      selMonths=['all'];
+      document.querySelectorAll('#month-pills .pill').forEach(b=>b.classList.remove('active'));
+      if(allBtn)allBtn.classList.add('active-all');
+      return;
+    }
+  }
+  render();
+}
+
+function selectPort(p,btn){
+  selPort=p;
+  document.querySelectorAll('#port-pills .pill').forEach(b=>b.classList.remove('active','active-all'));
+  btn.classList.add(p==='all'?'active-all':'active');
+  render();
+}
+
+window.addEventListener('DOMContentLoaded',render);
+</script>
+</body>
+</html>
