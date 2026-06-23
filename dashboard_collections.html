@@ -6,49 +6,82 @@
 <title>داشبورد التحصيلات 2026</title>
 <script>
 (function(){
-  const PASS = '1961';
-  const KEY = 'dashboard_auth_2026';
-  if(sessionStorage.getItem(KEY) === '1') return;
+  // قراءة المحفظة المقيّدة من الـ URL hash
+  // الـ hub يضيف #port=XXX في نهاية الرابط
+  var lock = null;
+  try{
+    var h = window.location.hash; // مثال: #coll|1%20-%20أسواق%20القرين
+    if(h && h.indexOf('coll|') === 1){
+      var raw = decodeURIComponent(h.slice(6));
+      lock = (raw === 'all') ? null : raw;
+    }
+  }catch(e){}
+
+  if(lock !== undefined && h && h.indexOf('coll|') === 1){
+    // جاء من central hub — طبّق القيد مباشرة بدون شاشة دخول
+    window.__COLL_PORT_LOCK = lock;
+    return;
+  }
+
+  // لا يوجد hash — عرض شاشة دخول مستقلة
+  var DIRECT_AUTH = {
+    '1961':  null,
+    'N1985': '1 - أسواق القرين',
+    'A1987': '3 - أسواق العارضية',
+    'A1993': '2 - مجمعات العقيلة',
+    'A1994': '5 - العقارات التجارية',
+    'F1977': '4 - العقارات السكنية',
+    'W1966': '8 - أملاك خاصة'
+  };
+
   document.addEventListener('DOMContentLoaded', function(){
     document.body.style.display = 'none';
-    var overlay = document.createElement('div');
-    overlay.id = 'auth-overlay';
-    overlay.style.cssText = 'position:fixed;inset:0;background:linear-gradient(135deg,#1e293b,#0f172a);display:flex;align-items:center;justify-content:center;z-index:99999;font-family:Cairo,sans-serif;direction:rtl';
-    overlay.innerHTML = `
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:linear-gradient(135deg,#1e293b,#0f172a);display:flex;align-items:center;justify-content:center;z-index:99999;font-family:Cairo,sans-serif;direction:rtl';
+    ov.innerHTML = `
       <div style="background:#fff;border-radius:20px;padding:48px 40px;width:360px;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,.4)">
         <div style="font-size:40px;margin-bottom:16px">🔐</div>
-        <h2 style="color:#1e293b;font-size:20px;font-weight:800;margin-bottom:6px">داشبورد التحصيلات</h2>
+        <h2 style="color:#1e293b;font-size:20px;font-weight:800;margin-bottom:6px;font-family:Tajawal,sans-serif">داشبورد التحصيلات</h2>
         <p style="color:#64748b;font-size:13px;margin-bottom:28px">أدخل كلمة المرور للمتابعة</p>
-        <input id="pass-input" type="password" placeholder="كلمة المرور" style="width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:10px;font-size:16px;font-family:Cairo,sans-serif;text-align:center;outline:none;transition:border .2s;margin-bottom:8px">
+        <input id="pass-input" type="password" placeholder="كلمة المرور"
+          style="width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:10px;font-size:16px;font-family:Cairo,sans-serif;text-align:center;outline:none;transition:border .2s;margin-bottom:8px">
         <div id="pass-err" style="color:#f87171;font-size:12px;height:18px;margin-bottom:8px"></div>
         <button id="pass-btn" style="width:100%;padding:13px;background:linear-gradient(135deg,#c9a84c,#e8c97a);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:Cairo,sans-serif;cursor:pointer">دخول</button>
       </div>`;
-    document.body.appendChild(overlay);
+    document.body.appendChild(ov);
     document.body.style.display = '';
-    var input = document.getElementById('pass-input');
+    var inp = document.getElementById('pass-input');
     var btn = document.getElementById('pass-btn');
     var err = document.getElementById('pass-err');
-    input.focus();
-    input.addEventListener('focus', function(){ this.style.borderColor='#c9a84c'; });
-    input.addEventListener('blur',  function(){ this.style.borderColor='#e2e8f0'; });
+    inp.focus();
+    inp.addEventListener('focus', function(){ this.style.borderColor='#c9a84c'; });
+    inp.addEventListener('blur',  function(){ this.style.borderColor='#e2e8f0'; });
     function tryLogin(){
-      if(input.value === PASS){
-        sessionStorage.setItem(KEY,'1');
-        overlay.style.opacity='0';
-        overlay.style.transition='opacity .3s';
-        setTimeout(function(){ overlay.remove(); },300);
+      var val = inp.value.trim();
+      if(DIRECT_AUTH.hasOwnProperty(val)){
+        window.__COLL_PORT_LOCK = DIRECT_AUTH[val];
+        ov.style.opacity='0'; ov.style.transition='opacity .3s';
+        setTimeout(function(){ ov.remove(); applyCollLock(window.__COLL_PORT_LOCK); }, 300);
       } else {
-        err.textContent = 'كلمة المرور غير صحيحة';
-        input.style.borderColor='#f87171';
-        input.value='';
-        input.focus();
-        setTimeout(function(){ err.textContent=''; input.style.borderColor='#e2e8f0'; },2000);
+        err.textContent='كلمة المرور غير صحيحة';
+        inp.style.borderColor='#f87171'; inp.value=''; inp.focus();
+        setTimeout(function(){ err.textContent=''; inp.style.borderColor='#e2e8f0'; }, 2000);
       }
     }
     btn.addEventListener('click', tryLogin);
-    input.addEventListener('keydown', function(e){ if(e.key==='Enter') tryLogin(); });
+    inp.addEventListener('keydown', function(e){ if(e.key==='Enter') tryLogin(); });
   });
 })();
+
+function applyCollLock(lock){
+  if(lock === null || lock === undefined) return;
+  var pf = document.getElementById('port-filter-bar');
+  var ps = document.getElementById('port-filter-bar-sep');
+  if(pf) pf.style.display='none';
+  if(ps) ps.style.display='none';
+  if(typeof selPort !== 'undefined') selPort = lock;
+  if(typeof render === 'function') render();
+}
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -170,16 +203,18 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
       <button class="pill" onclick="toggleMonth(5,this)">مايو</button>
       <button class="pill" onclick="toggleMonth(6,this)">22 يونيو</button>
     </div>
-    <div class="filter-sep"></div>
-    <span class="filter-label">🏢 المحفظة:</span>
-    <div class="pills" id="port-pills">
-      <button class="pill active-all" onclick="selectPort('all',this)">جميع المحافظ</button>
-      <button class="pill" onclick="selectPort('1 - أسواق القرين',this)">القرين</button>
-      <button class="pill" onclick="selectPort('2 - مجمعات العقيلة',this)">العقيلة</button>
-      <button class="pill" onclick="selectPort('3 - أسواق العارضية',this)">العارضية</button>
-      <button class="pill" onclick="selectPort('4 - العقارات السكنية',this)">السكني</button>
-      <button class="pill" onclick="selectPort('5 - العقارات التجارية',this)">التجاري</button>
-      <button class="pill" onclick="selectPort('8 - أملاك خاصة',this)">أملاك خاصة</button>
+    <div class="filter-sep" id="port-filter-bar-sep"></div>
+    <div id="port-filter-bar" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span class="filter-label">🏢 المحفظة:</span>
+      <div class="pills" id="port-pills">
+        <button class="pill active-all" onclick="selectPort('all',this)">جميع المحافظ</button>
+        <button class="pill" onclick="selectPort('1 - أسواق القرين',this)">القرين</button>
+        <button class="pill" onclick="selectPort('2 - مجمعات العقيلة',this)">العقيلة</button>
+        <button class="pill" onclick="selectPort('3 - أسواق العارضية',this)">العارضية</button>
+        <button class="pill" onclick="selectPort('4 - العقارات السكنية',this)">السكني</button>
+        <button class="pill" onclick="selectPort('5 - العقارات التجارية',this)">التجاري</button>
+        <button class="pill" onclick="selectPort('8 - أملاك خاصة',this)">أملاك خاصة</button>
+      </div>
     </div>
     <span class="view-label" id="view-label" style="margin-right:auto">جميع المحافظ — الإجمالي</span>
   </div>
@@ -883,7 +918,13 @@ function selectPort(p,btn){
   render();
 }
 
-window.addEventListener('DOMContentLoaded',render);
+window.addEventListener('DOMContentLoaded', function(){
+  var lock = window.__COLL_PORT_LOCK;
+  if(lock !== undefined && lock !== null){
+    applyCollLock(lock);
+  }
+  render();
+});
 </script>
 </body>
 </html>
