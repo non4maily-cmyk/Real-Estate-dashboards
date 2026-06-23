@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تقارير مكتب الاستشارات</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.x/dist/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-page: #f1f5f9;
+    --bg-card: #ffffff;
+    --bg-topbar: #0f172a;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+    --border-hover: #b8860b;
+    --gold: #b8860b;
+    --gold-light: #faeeda;
+    --gold-dark: #9a7009;
+    --green: #1d9e75;
+    --green-light: #e1f5ee;
+    --blue: #185fa5;
+    --blue-light: #e6f1fb;
+    --amber-dot: #ef9f27;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    background: var(--bg-page);
+    min-height: 100vh;
+    direction: rtl;
+  }
+
+  /* ── LOGIN ── */
+  #login-screen {
+    min-height: 100vh;
+    background: var(--bg-topbar);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .login-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-xl);
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  }
+
+  .login-icon { font-size: 52px; margin-bottom: 1rem; }
+  .login-title { font-size: 20px; font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem; }
+  .login-sub { font-size: 13px; color: var(--text-secondary); margin-bottom: 1.75rem; }
+
+  .login-input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 16px;
+    text-align: center;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+    direction: ltr;
+    letter-spacing: 3px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .login-input:focus { border-color: var(--gold); }
+
+  .login-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--gold);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .login-btn:hover { background: var(--gold-dark); }
+
+  .login-err {
+    font-size: 13px;
+    color: #dc2626;
+    margin-top: 0.6rem;
+    min-height: 20px;
+  }
+
+  .login-credit {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 1.75rem;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--bg-topbar);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .topbar-logo { font-size: 26px; }
+  .topbar-title { color: #fff; font-size: 16px; font-weight: 600; }
+  .topbar-sub { color: #94a3b8; font-size: 11px; margin-top: 1px; }
+
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+  .topbar-period {
+    background: #1e293b;
+    color: var(--gold);
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(184,134,11,0.3);
+  }
+
+  .topbar-logout {
+    background: transparent;
+    border: 1px solid #334155;
+    color: #94a3b8;
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+  }
+  .topbar-logout:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* ── MAIN BODY ── */
+  #main-screen { display: none; }
+
+  .main-body {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 14px;
+    background: var(--gold);
+    border-radius: 2px;
+  }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+  }
+
+  /* ── REPORT CARD ── */
+  .report-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    padding: 1.4rem;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .report-card:hover {
+    border-color: var(--gold);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(184,134,11,0.12);
+  }
+
+  .add-card {
+    border-style: dashed;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+    color: var(--text-muted);
+    cursor: default;
+  }
+  .add-card:hover {
+    border-color: var(--border);
+    transform: none;
+    box-shadow: none;
+    color: var(--text-muted);
+  }
+
+  .card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    font-size: 20px;
+  }
+
+  .card-icon.amber { background: var(--gold-light); color: var(--gold); }
+  .card-icon.blue { background: var(--blue-light); color: var(--blue); }
+  .card-icon.green { background: var(--green-light); color: var(--green); }
+
+  .portfolio-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+    background: var(--gold-light);
+    color: var(--gold-dark);
+    margin-bottom: 0.75rem;
+    width: fit-content;
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.4rem;
+  }
+
+  .card-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    flex: 1;
+    margin-bottom: 1rem;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .card-status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+  .status-dot.green { background: var(--green); }
+  .status-dot.amber { background: var(--amber-dot); }
+
+  .card-arrow { color: var(--text-muted); font-size: 16px; }
+
+  /* ── VIEWER ── */
+  #viewer-screen { display: none; }
+
+  .viewer-topbar {
+    background: var(--bg-topbar);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .back-btn {
+    background: transparent;
+    border: 1px solid #334155;
+    color: #94a3b8;
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+  }
+  .back-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  .viewer-title { color: #fff; font-size: 14px; font-weight: 500; }
+
+  #main-iframe {
+    width: 100%;
+    border: none;
+    display: block;
+    min-height: calc(100vh - 56px);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .main-body { padding: 1rem; }
+    .topbar { padding: 12px 16px; }
+    .topbar-period { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-icon">🏢</div>
+    <div class="login-title">تقارير مكتب الاستشارات</div>
+    <div class="login-sub">أدخل كلمة المرور للمتابعة</div>
+    <input class="login-input" type="password" id="pw-input" placeholder="كلمة المرور" autocomplete="off" />
+    <button class="login-btn" onclick="doLogin()">دخول</button>
+    <div class="login-err" id="login-err"></div>
+    <div class="login-credit">Prepared by Mohamed Osman &nbsp;·&nbsp; 2026 ©</div>
+  </div>
+</div>
+
+<!-- ══ MAIN ══ -->
+<div id="main-screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">🏢</div>
+      <div>
+        <div class="topbar-title">تقارير مكتب الاستشارات</div>
+        <div class="topbar-sub" id="user-label">Real Estate Management — 2026</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-period" id="period-label">يناير — يونيو 2026</div>
+      <button class="topbar-logout" onclick="doLogout()">
+        <i class="ti ti-logout"></i> خروج
+      </button>
+    </div>
+  </div>
+  <div class="main-body">
+    <div class="section-label">التقارير والداشبوردات — اضغط على أي بطاقة للانتقال مباشرة</div>
+    <div class="cards-grid" id="cards-container"></div>
+  </div>
+</div>
+
+<!-- ══ VIEWER ══ -->
+<div id="viewer-screen">
+  <div class="viewer-topbar">
+    <button class="back-btn" onclick="goBack()">
+      <i class="ti ti-arrow-right"></i> رجوع
+    </button>
+    <div class="viewer-title" id="viewer-title"></div>
+  </div>
+  <iframe id="main-iframe" src="" allow="fullscreen"></iframe>
+</div>
+
+<script>
+// ══ CONFIG ══
+const FULL_PW = "1961";
+
+const PORTFOLIOS = {
+  "N1985": { name: "القرين",       filter: "القرين"       },
+  "A1987": { name: "العارضية",     filter: "العارضية"     },
+  "A1993": { name: "العقيلة",      filter: "العقيلة"      },
+  "A1994": { name: "التجاري",      filter: "التجاري"      },
+  "F1977": { name: "السكني",       filter: "السكني"       },
+  "W1966": { name: "أملاك خاصة",  filter: "أملاك خاصة"  }
+};
+
+const LINKS = {
+  collections: "https://tinyurl.com/Collection-Dashboard-2026",
+  lease:       "https://tinyurl.com/Lease-Contracts-Dashboard",
+  cashflow:    "https://non4maily-cmyk.github.io/Real-Estate-dashboards/%D8%A8%D9%8A%D8%A7%D9%86%20%D8%A8%D8%A7%D9%84%D8%AA%D8%AF%D9%82%D8%A7%D8%AA%20%D8%A7%D9%84%D9%86%D9%82%D8%AF%D9%8A%D8%A9%20%D8%A7%D9%84%D8%AF%D8%A7%D8%AE%D9%84%20%D9%88%D8%A7%D9%84%D8%AE%D8%A7%D8%B1%D8%AC%20%D9%84%D8%B4%D9%87%D8%B1%205-2026%20-%20%D9%85%D8%B1%D8%AA%D8%AA%D8%A8.pdf"
+};
+
+// ══ STATE ══
+let currentMode = null;
+let currentPortfolio = null;
+let fromSingleDirect = false;
+
+// ══ LOGIN ══
+document.getElementById("pw-input").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") doLogin();
+  document.getElementById("login-err").textContent = "";
+});
+
+function doLogin() {
+  const raw = document.getElementById("pw-input").value.trim();
+  const err = document.getElementById("login-err");
+
+  // Full admin access
+  if (raw === FULL_PW) {
+    currentMode = "full";
+    currentPortfolio = null;
+    fromSingleDirect = false;
+    showMain();
+    return;
+  }
+
+  const suffix = raw.slice(-1).toLowerCase();
+  const base   = raw.slice(0, -1);
+
+  // Portfolio — both dashboards
+  if (PORTFOLIOS[raw]) {
+    currentMode = "portfolio-both";
+    currentPortfolio = PORTFOLIOS[raw];
+    fromSingleDirect = false;
+    showMain();
+    return;
+  }
+
+  // Portfolio — single dashboard (c or l)
+  if ((suffix === "c" || suffix === "l") && PORTFOLIOS[base]) {
+    currentMode = suffix === "c" ? "portfolio-collections" : "portfolio-lease";
+    currentPortfolio = PORTFOLIOS[base];
+    fromSingleDirect = true;
+    const portParam = encodeURIComponent(currentPortfolio.filter);
+    const title = suffix === "c"
+      ? "داشبورد التحصيلات — محفظة " + currentPortfolio.name
+      : "داشبورد العقود — محفظة " + currentPortfolio.name;
+    const url = suffix === "c"
+      ? LINKS.collections + "?portfolio=" + portParam
+      : LINKS.lease + "?portfolio=" + portParam;
+    showViewer(title, url);
+    return;
+  }
+
+  err.textContent = "كلمة المرور غير صحيحة، يرجى المحاولة مجدداً";
+}
+
+// ══ MAIN SCREEN ══
+function showMain() {
+  document.getElementById("login-screen").style.display  = "none";
+  document.getElementById("viewer-screen").style.display = "none";
+  document.getElementById("main-screen").style.display   = "block";
+
+  if (currentMode === "full") {
+    document.getElementById("user-label").textContent = "الإدارة العامة — صلاحية كاملة";
+    buildFullCards();
+  } else {
+    document.getElementById("user-label").textContent = "محفظة " + currentPortfolio.name;
+    buildPortfolioCards();
+  }
+}
+
+function buildFullCards() {
+  const container = document.getElementById("cards-container");
+  container.innerHTML = "";
+
+  const cards = [
+    {
+      iconClass: "amber", icon: "ti-building-store",
+      title: "داشبورد التحصيلات",
+      desc: "تحليل تفصيلي للتحصيلات والخدمات لجميع المحافظ — يشمل طرق الدفع، الإعفاءات، الشيكات المؤجلة، ونسبة الإنجاز مقارنةً بالإيرادات المستحقة.",
+      status: "تحصيلات 2026", dotClass: "green", statusLabel: "محدّث",
+      url: LINKS.collections, label: "داشبورد التحصيلات"
+    },
+    {
+      iconClass: "blue", icon: "ti-file-text",
+      title: "داشبورد العقود",
+      desc: "تحليل شامل لعقود الإيجار عبر جميع المحافظ — يشمل حالة العقود، تواريخ الانتهاء، التجديدات، والمؤشرات الرئيسية لإدارة المحفظة العقارية.",
+      status: "عقود 2026", dotClass: "green", statusLabel: "محدّث",
+      url: LINKS.lease, label: "داشبورد العقود"
+    },
+    {
+      iconClass: "green", icon: "ti-cash",
+      title: "بيان التدفقات النقدية",
+      desc: "بيان مفصل بالتدفقات النقدية الداخلة والخارجة الفعلية حتى مايو 2026 — يشمل التحصيلات، المصروفات التشغيلية، التسهيلات البنكية، وأرصدة البنوك.",
+      status: "يناير — مايو 2026", dotClass: "amber", statusLabel: "حتى مايو 2026",
+      url: LINKS.cashflow, label: "بيان التدفقات النقدية", newTab: true
+    }
+  ];
+
+  cards.forEach(function(c) {
+    container.appendChild(makeReportCard(c));
+  });
+
+  // Add placeholder card
+  const ph = document.createElement("div");
+  ph.className = "report-card add-card";
+  ph.innerHTML = '<i class="ti ti-plus" style="font-size:28px;margin-bottom:10px"></i><span style="font-size:13px">تقرير جديد قريباً</span>';
+  container.appendChild(ph);
+}
+
+function buildPortfolioCards() {
+  const container = document.getElementById("cards-container");
+  container.innerHTML = "";
+
+  const badge = '<div class="portfolio-badge"><i class="ti ti-building" style="font-size:12px"></i> محفظة ' + currentPortfolio.name + '</div>';
+  const portParam = encodeURIComponent(currentPortfolio.filter);
+
+  const cards = [
+    {
+      iconClass: "amber", icon: "ti-building-store",
+      badge: badge,
+      title: "داشبورد التحصيلات",
+      desc: "تحصيلات محفظة " + currentPortfolio.name + " — مفلترة تلقائياً على محفظتك مع إمكانية الفلترة بالتاريخ.",
+      status: "تحصيلات 2026", dotClass: "green", statusLabel: "محدّث",
+      url: LINKS.collections + "?portfolio=" + portParam,
+      label: "داشبورد التحصيلات — " + currentPortfolio.name
+    },
+    {
+      iconClass: "blue", icon: "ti-file-text",
+      badge: badge,
+      title: "داشبورد العقود",
+      desc: "عقود محفظة " + currentPortfolio.name + " — يظهر تاب محفظتك فقط مع كامل تفاصيل العقود والانتهاءات.",
+      status: "عقود 2026", dotClass: "green", statusLabel: "محدّث",
+      url: LINKS.lease + "?portfolio=" + portParam,
+      label: "داشبورد العقود — " + currentPortfolio.name
+    }
+  ];
+
+  cards.forEach(function(c) {
+    container.appendChild(makeReportCard(c));
+  });
+}
+
+function makeReportCard(c) {
+  const div = document.createElement("div");
+  div.className = "report-card";
+  div.innerHTML =
+    (c.badge || "") +
+    '<div class="card-icon ' + c.iconClass + '"><i class="ti ' + c.icon + '"></i></div>' +
+    '<div class="card-title">' + c.title + '</div>' +
+    '<div class="card-desc">' + c.desc + '</div>' +
+    '<div class="card-footer">' +
+      '<div class="card-status"><span class="status-dot ' + c.dotClass + '"></span>' + c.statusLabel + ' — ' + c.status + '</div>' +
+      (c.newTab ? '<i class="ti ti-external-link card-arrow"></i>' : '<i class="ti ti-arrow-left card-arrow"></i>') +
+    '</div>';
+  div.addEventListener("click", function() {
+    if (c.newTab) {
+      window.open(c.url, '_blank');
+    } else {
+      showViewer(c.label, c.url);
+    }
+  });
+  return div;
+}
+
+// ══ VIEWER ══
+function showViewer(title, url) {
+  document.getElementById("login-screen").style.display  = "none";
+  document.getElementById("main-screen").style.display   = "none";
+  document.getElementById("viewer-screen").style.display = "block";
+  document.getElementById("viewer-title").textContent    = title;
+  document.getElementById("main-iframe").src             = url;
+}
+
+function goBack() {
+  document.getElementById("main-iframe").src = "";
+  document.getElementById("viewer-screen").style.display = "none";
+  if (fromSingleDirect) {
+    doLogout();
+  } else {
+    showMain();
+  }
+}
+
+// ══ LOGOUT ══
+function doLogout() {
+  currentMode      = null;
+  currentPortfolio = null;
+  fromSingleDirect = false;
+  document.getElementById("main-screen").style.display   = "none";
+  document.getElementById("viewer-screen").style.display = "none";
+  document.getElementById("login-screen").style.display  = "flex";
+  document.getElementById("pw-input").value              = "";
+  document.getElementById("login-err").textContent       = "";
+}
+</script>
+</body>
+</html>
