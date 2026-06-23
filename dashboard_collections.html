@@ -843,22 +843,27 @@ window.addEventListener('DOMContentLoaded', function(){
   const urlParams = new URLSearchParams(window.location.search);
   const urlPort = urlParams.get('portfolio');
   if(urlPort){
-    // Find the matching full port key
     const matchIdx = SHORTS.indexOf(urlPort);
     const fullKey = matchIdx >= 0 ? PORTS[matchIdx] : null;
     if(fullKey){
-      // Lock to this portfolio: hide port filter bar, set selection
       selPort = fullKey;
-      const portPillsBar = document.getElementById('port-pills');
-      if(portPillsBar){
-        portPillsBar.parentElement.style.display = 'none'; // hide المحفظة label + pills
-        const sep = portPillsBar.previousElementSibling;
-        if(sep && sep.classList.contains('filter-sep')) sep.style.display = 'none';
+      // Hide ONLY: portfolio pills + its label + the separator before it
+      // Month filter stays fully visible and functional
+      const portPills = document.getElementById('port-pills');
+      if(portPills){
+        portPills.style.display = 'none';
+        // Hide separator immediately before port-pills
+        let prev = portPills.previousElementSibling;
+        if(prev && prev.classList.contains('filter-sep')) prev.style.display = 'none';
+        // Hide المحفظة label immediately before the separator
+        if(prev){
+          let prev2 = prev.previousElementSibling;
+          if(prev2 && prev2.classList.contains('filter-label')) prev2.style.display = 'none';
+        }
       }
-      // Also hide the filter label for portfolio
-      document.querySelectorAll('.filter-label').forEach(el => {
-        if(el.textContent.includes('المحفظة')) el.style.display = 'none';
-      });
+      // Hide view-label (shows current selection) to avoid confusion
+      const viewLabel = document.getElementById('view-label');
+      if(viewLabel) viewLabel.style.display = 'none';
     }
   }
   render();
