@@ -4,52 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>داشبورد التحصيلات 2026</title>
-<script>
-(function(){
-  const PASS = '1961';
-  const KEY = 'dashboard_auth_2026';
-  if(sessionStorage.getItem(KEY) === '1') return;
-  document.addEventListener('DOMContentLoaded', function(){
-    document.body.style.display = 'none';
-    var overlay = document.createElement('div');
-    overlay.id = 'auth-overlay';
-    overlay.style.cssText = 'position:fixed;inset:0;background:linear-gradient(135deg,#1e293b,#0f172a);display:flex;align-items:center;justify-content:center;z-index:99999;font-family:Cairo,sans-serif;direction:rtl';
-    overlay.innerHTML = `
-      <div style="background:#fff;border-radius:20px;padding:48px 40px;width:360px;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,.4)">
-        <div style="font-size:40px;margin-bottom:16px">🔐</div>
-        <h2 style="color:#1e293b;font-size:20px;font-weight:800;margin-bottom:6px">داشبورد التحصيلات</h2>
-        <p style="color:#64748b;font-size:13px;margin-bottom:28px">أدخل كلمة المرور للمتابعة</p>
-        <input id="pass-input" type="password" placeholder="كلمة المرور" style="width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:10px;font-size:16px;font-family:Cairo,sans-serif;text-align:center;outline:none;transition:border .2s;margin-bottom:8px">
-        <div id="pass-err" style="color:#f87171;font-size:12px;height:18px;margin-bottom:8px"></div>
-        <button id="pass-btn" style="width:100%;padding:13px;background:linear-gradient(135deg,#c9a84c,#e8c97a);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:Cairo,sans-serif;cursor:pointer">دخول</button>
-      </div>`;
-    document.body.appendChild(overlay);
-    document.body.style.display = '';
-    var input = document.getElementById('pass-input');
-    var btn = document.getElementById('pass-btn');
-    var err = document.getElementById('pass-err');
-    input.focus();
-    input.addEventListener('focus', function(){ this.style.borderColor='#c9a84c'; });
-    input.addEventListener('blur',  function(){ this.style.borderColor='#e2e8f0'; });
-    function tryLogin(){
-      if(input.value === PASS){
-        sessionStorage.setItem(KEY,'1');
-        overlay.style.opacity='0';
-        overlay.style.transition='opacity .3s';
-        setTimeout(function(){ overlay.remove(); },300);
-      } else {
-        err.textContent = 'كلمة المرور غير صحيحة';
-        input.style.borderColor='#f87171';
-        input.value='';
-        input.focus();
-        setTimeout(function(){ err.textContent=''; input.style.borderColor='#e2e8f0'; },2000);
-      }
-    }
-    btn.addEventListener('click', tryLogin);
-    input.addEventListener('keydown', function(e){ if(e.key==='Enter') tryLogin(); });
-  });
-})();
-</script>
+
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
