@@ -251,59 +251,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 </head>
 <body>
 
-<!-- ─── شاشة كلمة السر ─── -->
-<div id="pwd-overlay" style="
-  position:fixed;inset:0;z-index:99999;
-  background:linear-gradient(135deg,#0f1117 0%,#1a1d2e 100%);
-  display:flex;align-items:center;justify-content:center;
-  font-family:'Cairo',sans-serif;
-">
-  <div style="
-    background:#1e2235;border:1px solid rgba(201,168,76,.25);
-    border-radius:20px;padding:48px 40px;width:360px;
-    box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center;
-  ">
-    <div style="font-size:48px;margin-bottom:16px;">🔒</div>
-    <h2 style="color:#c9a84c;font-size:20px;margin:0 0 8px;">تحليل عقود التأجير</h2>
-    <p style="color:#64748b;font-size:13px;margin:0 0 28px;">أدخل كلمة المرور للمتابعة</p>
-    <input id="pwd-input" type="password" placeholder="كلمة المرور" style="
-      width:100%;box-sizing:border-box;padding:12px 16px;
-      background:#0f1117;border:1px solid rgba(201,168,76,.3);
-      border-radius:10px;color:#f1f5f9;font-family:'Cairo',sans-serif;
-      font-size:15px;text-align:center;outline:none;
-      transition:border-color .2s;margin-bottom:8px;
-    " onkeydown="if(event.key==='Enter') checkPwd()">
-    <div id="pwd-error" style="color:#f87171;font-size:12px;height:20px;margin-bottom:8px;"></div>
-    <button onclick="checkPwd()" style="
-      width:100%;padding:12px;background:linear-gradient(135deg,#c9a84c,#e8c97a);
-      border:none;border-radius:10px;color:#0f1117;font-family:'Cairo',sans-serif;
-      font-size:15px;font-weight:700;cursor:pointer;
-      transition:opacity .2s;
-    " onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-      دخول
-    </button>
-  </div>
-</div>
 
-<script>
-function checkPwd(){
-  const val = document.getElementById('pwd-input').value;
-  const err = document.getElementById('pwd-error');
-  if(val === '1961'){
-    document.getElementById('pwd-overlay').style.display='none';
-    err.textContent='';
-  } else {
-    err.textContent='كلمة المرور غير صحيحة';
-    document.getElementById('pwd-input').value='';
-    document.getElementById('pwd-input').focus();
-  }
-}
-// تركيز تلقائي على حقل الإدخال
-window.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('pwd-input').focus();
-});
-</script>
-<!-- ─── نهاية شاشة كلمة السر ─── -->
 
 <div class="loading" id="loading">
   <div class="spinner"></div>
