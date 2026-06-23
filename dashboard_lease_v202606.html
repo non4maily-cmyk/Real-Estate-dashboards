@@ -1730,6 +1730,25 @@ window.addEventListener('load', () => {
     // Set initial date
     setActiveDateStr('2026-06-22');
     
+    // ── URL Parameter: ?portfolio=القرين ──
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlPort = urlParams.get('portfolio');
+    const ALLOWED_PORTS = ['القرين','العارضية','العقيلة','التجاري','السكني','أملاك خاصة'];
+    if(urlPort && ALLOWED_PORTS.includes(urlPort)){
+      // Switch to this portfolio tab
+      currentView = urlPort;
+      // Update tab UI: hide all tabs except the matching one, hide compare tab
+      document.querySelectorAll('.tab').forEach(tab => {
+        const v = tab.dataset.view;
+        if(v === urlPort){
+          tab.classList.add('active');
+        } else {
+          tab.classList.remove('active');
+          tab.style.display = 'none'; // hide other tabs
+        }
+      });
+    }
+    
     // Render and register baseline snapshot
     renderAll();
     
