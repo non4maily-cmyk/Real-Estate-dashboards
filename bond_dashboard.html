@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة تحكم محفظة السندات</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap');
+:root{
+  --blue-50:#E6F1FB;--blue-100:#B5D4F4;--blue-600:#185FA5;--blue-800:#0C447C;
+  --green-50:#E1F5EE;--green-600:#0F6E56;--green-800:#085041;
+  --coral-50:#FAECE7;--coral-600:#993C1D;
+  --amber-50:#FAEEDA;--amber-600:#854F0B;--amber-800:#633806;
+  --purple-50:#EEEDFE;--purple-800:#3C3489;
+  --pink-50:#FBEAF0;--pink-800:#72243E;
+  --gray-50:#F8F9FC;--gray-100:#F1EFE8;--gray-200:#D3D1C7;--gray-400:#888780;--gray-800:#444441;
+  --bg:#F4F6FA;--surface:#FFFFFF;--border:rgba(0,0,0,0.07);
+  --text-primary:#1A1C23;--text-secondary:#6B7280;--text-muted:#9CA3AF;
+  --r-md:10px;--r-lg:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans Arabic','Segoe UI',sans-serif;background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.6;min-height:100vh;padding:24px}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.ph-title{font-size:20px;font-weight:600}
+.ph-date{font-size:12px;color:var(--text-muted);background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:4px 12px}
+.sl{font-size:10.5px;font-weight:600;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;right:0;width:4px;height:100%}
+.kb::before{background:var(--blue-600)}.kc::before{background:var(--coral-600)}
+.kg::before{background:var(--gray-400)}.kn::before{background:var(--green-600)}
+.ka::before{background:var(--amber-600)}
+.ki{font-size:20px;margin-bottom:10px;opacity:.85}
+.kl{font-size:11px;color:var(--text-secondary);margin-bottom:4px}
+.kv{font-size:24px;font-weight:600;line-height:1.1}
+.kv.b{color:var(--blue-600)}.kv.n{color:var(--green-600)}.kv.c{color:var(--coral-600)}.kv.a{color:var(--amber-600)}.kv.g{color:var(--gray-800)}
+.ks{font-size:11px;color:var(--text-muted);margin-top:4px}
+
+/* LOAN */
+.lr{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+.lc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px}
+.lt{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.lb{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.lo{font-size:10px;color:var(--text-muted);background:var(--gray-50);border:1px solid var(--border);border-radius:20px;padding:2px 9px}
+.la{font-size:22px;font-weight:600;margin-bottom:2px}
+.lp{font-size:11px;color:var(--text-muted);margin-bottom:10px}
+.bt{height:5px;background:var(--gray-100);border-radius:3px;overflow:hidden}
+.bf{height:5px;border-radius:3px}
+
+/* TABLE */
+.tw{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:24px;overflow-x:auto}
+.bt2{width:100%;border-collapse:collapse;font-size:12px;min-width:1060px}
+.bt2 th{background:var(--gray-50);color:var(--text-muted);font-weight:600;padding:10px 11px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap;font-size:11px}
+.bt2 td{padding:9px 11px;border-bottom:1px solid rgba(0,0,0,0.04);color:var(--text-primary);text-align:right;vertical-align:middle}
+.bt2 tr:last-child td{border-bottom:none}
+.bt2 tr:hover td{background:rgba(0,0,0,.012)}
+.bn{font-weight:500;font-size:12px}
+.bd{font-size:10px;color:var(--text-muted);display:block;margin-top:1px}
+.cp{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:2px 9px;border-radius:20px;white-space:nowrap}
+.pco{background:var(--blue-50);color:var(--blue-800)}
+.pow{background:var(--green-50);color:var(--green-800)}
+.ppr{background:var(--amber-50);color:var(--amber-800)}
+.rb{display:inline-block;font-size:10px;font-weight:500;padding:2px 7px;border-radius:6px;margin:1px;white-space:nowrap}
+.rf{background:var(--purple-50);color:var(--purple-800)}
+.rv{background:var(--pink-50);color:var(--pink-800)}
+.rl{background:var(--gray-100);color:var(--gray-800)}
+.ru{background:var(--green-50);color:var(--green-800)}
+.pc{display:inline-block;font-size:10px;font-weight:500;background:var(--blue-50);color:var(--blue-800);border-radius:6px;padding:2px 7px;margin:1px}
+.pf{font-size:10px;color:var(--text-muted);display:block;margin-top:3px}
+.pv{color:var(--green-600);font-weight:600}
+.rv2{color:var(--blue-600);font-weight:600}
+
+/* SENSITIVITY */
+.sw{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;margin-bottom:24px}
+.sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.st{font-size:14px;font-weight:600}
+.ss{font-size:11px;color:var(--text-muted);margin-top:3px}
+.stepper{display:flex;align-items:center;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;background:var(--surface)}
+.sbtn{width:40px;height:44px;border:none;background:var(--gray-50);cursor:pointer;font-size:18px;color:var(--blue-600);display:flex;align-items:center;justify-content:center;transition:background .15s;font-family:inherit}
+.sbtn:hover{background:var(--blue-50)}
+.sbtn:active{background:var(--blue-100)}
+.sdisp{min-width:90px;text-align:center;padding:0 14px;font-size:22px;font-weight:700;color:var(--blue-600);border-left:1px solid var(--border);border-right:1px solid var(--border);line-height:44px}
+.slbl{font-size:10px;color:var(--text-muted);text-align:center;margin-top:4px}
+.stw{overflow-x:auto}
+.stbl{width:100%;border-collapse:collapse;font-size:12px;min-width:750px}
+.stbl th{background:var(--gray-50);color:var(--text-muted);font-weight:600;padding:9px 12px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap;font-size:11px}
+.stbl td{padding:9px 12px;border-bottom:1px solid rgba(0,0,0,0.04);text-align:right;color:var(--text-primary)}
+.stbl tr:last-child td{border-bottom:none}
+.stbl tr:hover td{background:rgba(0,0,0,.012)}
+.stbl tfoot tr td{border-top:2px solid var(--border);background:var(--gray-50);font-weight:600}
+.dp{color:var(--green-600);font-weight:500}
+.dn{color:var(--coral-600);font-weight:500}
+.dz{color:var(--text-muted)}
+
+/* LEGEND */
+.leg{display:flex;flex-wrap:wrap;gap:14px;font-size:11px;color:var(--text-muted);padding-top:12px;border-top:1px solid var(--border)}
+.li{display:flex;align-items:center;gap:5px}
+.lsw{width:11px;height:11px;border-radius:3px;border:1px solid rgba(0,0,0,0.1);flex-shrink:0}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(3,1fr)}.lr{grid-template-columns:1fr}body{padding:14px}}
+</style>
+</head>
+<body>
+
+<div class="ph">
+  <div class="ph-title">لوحة تحكم محفظة السندات</div>
+  <div class="ph-date">بيانات: 24 ديسمبر 2025</div>
+</div>
+
+<div class="sl">ملخص المحفظة</div>
+<div class="kpi-row">
+  <div class="kpi kb"><div class="ki" style="color:var(--blue-600)">🏦</div><div class="kl">إجمالي المحفظة</div><div class="kv b">82.6M</div><div class="ks">دينار كويتي (موحد)</div></div>
+  <div class="kpi kc"><div class="ki" style="color:var(--coral-600)">⇄</div><div class="kl">إجمالي القروض</div><div class="kv c">44.0M</div><div class="ks">رافعة مالية 53.2%</div></div>
+  <div class="kpi kg"><div class="ki" style="color:var(--gray-400)">💼</div><div class="kl">التمويل الذاتي</div><div class="kv g">38.6M</div><div class="ks">46.8% من المحفظة</div></div>
+  <div class="kpi kn"><div class="ki" style="color:var(--green-600)">💰</div><div class="kl">صافي الربح السنوي</div><div class="kv n">3.13M</div><div class="ks">بعد خصم فوائد القروض</div></div>
+  <div class="kpi ka"><div class="ki" style="color:var(--amber-600)">📈</div><div class="kl">متوسط العائد (ROI)</div><div class="kv a">8.09%</div><div class="ks">على التمويل الذاتي</div></div>
+</div>
+
+<div class="sl">توزيع القروض حسب البنك</div>
+<div class="lr">
+  <div class="lc">
+    <div class="lt"><div class="lb"><span style="width:28px;height:28px;background:var(--blue-50);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🏛</span>بنك برقان</div><span class="lo">على الشركة</span></div>
+    <div class="la" style="color:var(--blue-600)">24.45M</div><div class="lp">55.6% من إجمالي القروض • د.ك</div>
+    <div class="bt"><div class="bf" style="width:55.6%;background:var(--blue-600)"></div></div>
+  </div>
+  <div class="lc">
+    <div class="lt"><div class="lb"><span style="width:28px;height:28px;background:var(--green-50);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🏛</span>البنك التجاري</div><span class="lo">على الشركة</span></div>
+    <div class="la" style="color:var(--green-600)">18.15M</div><div class="lp">41.3% من إجمالي القروض • د.ك</div>
+    <div class="bt"><div class="bf" style="width:41.3%;background:var(--green-600)"></div></div>
+  </div>
+  <div class="lc">
+    <div class="lt"><div class="lb"><span style="width:28px;height:28px;background:var(--amber-50);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🏛</span>بنك الخليج</div><span class="lo">على الملاك</span></div>
+    <div class="la" style="color:var(--amber-600)">1.38M</div><div class="lp">3.1% من إجمالي القروض • د.ك</div>
+    <div class="bt"><div class="bf" style="width:3.1%;background:var(--amber-600)"></div></div>
+  </div>
+</div>
+
+<div class="sl">تفاصيل السندات — الأرقام عند CBK = 3.50%</div>
+<div class="tw">
+<table class="bt2">
+<thead><tr>
+  <th style="width:160px">السند / المُصدر</th><th>مالك السند</th><th>قيمة المحفظة</th><th>قيمة القرض</th>
+  <th>أرباح السندات</th><th>فائدة القرض</th><th>صافي الربح السنوي</th><th>العائد على الاستثمار</th>
+  <th>معدلات الفائدة</th><th>هامش القرض</th><th>مواعيد الصرف</th>
+</tr></thead>
+<tbody>
+
+<tr>
+  <td><span class="bn">الأهلي الكويتي - العصيمي</span><span class="bd">2023.11.22 → 2033.10.10</span></td>
+  <td><span class="cp pco">باسم الشركة</span></td>
+  <td>8.0M</td><td>—</td><td>480K</td><td>—</td>
+  <td class="pv">480K</td><td class="rv2">6.00%</td>
+  <td><span class="rb rf">ثابت 6.25%</span><br><span class="rb rv">متغير CBK+2.25%</span></td>
+  <td>—</td>
+  <td><span class="pc">مايو</span><span class="pc">نوفمبر</span><span class="pf">كل 6 أشهر</span></td>
+</tr>
+
+<tr>
+  <td><span class="bn">الأهلي الكويتي - العصيمي</span><span class="bd">2025.12.08 → 2035.12.08</span></td>
+  <td><span class="cp pco">باسم الشركة</span></td>
+  <td>3.1M</td><td>—</td><td>178.3K</td><td>—</td>
+  <td class="pv">178.3K</td><td class="rv2">5.75%</td>
+  <td><span class="rb rf">ثابت 5.75%</span><br><span class="rb rv">متغير CBK+2.25%</span></td>
+  <td>—</td>
+  <td><span class="pc">مايو</span><span class="pc">نوفمبر</span><span class="pf">كل 6 أشهر</span></td>
+</tr>
+
+<tr>
+  <td><span class="bn">الأهلي الكويتي - جزيرة وربة</span><span class="bd">2025.06.26 → 2033.11.29</span></td>
+  <td><span class="cp pco">باسم الشركة</span></td>
+  <td>100K</td><td>75K</td><td>6K</td><td>3.4K</td>
+  <td class="pv">2.6K</td><td class="rv2">10.50%</td>
+  <td><span class="rb rf">ثابت 6.25%</span><br><span class="rb rv">متغير CBK+2.25%</span></td>
+  <td><span class="rb rl">CBK + 1.0%</span></td>
+  <td><span class="pc">مايو</span><span class="pc">نوفمبر</span><span class="pf">كل 6 أشهر</span></td>
+</tr>
+
+<tr>
+  <td><span class="bn">الأهلي الكويتي - جزيرة وربة</span><span class="bd">2025.12.09 → 2035.12.08</span></td>
+  <td><span class="cp pco">باسم الشركة</span></td>
+  <td>1.0M</td><td>750K</td><td>57.5K</td><td>33.8K</td>
+  <td class="pv">23.8K</td><td class="rv2">9.50%</td>
+  <td><span class="rb rf">ثابت 5.75%</span><br><span class="rb rv">متغير CBK+2.25%</span></td>
+  <td><span class="rb rl">CBK + 1.0%</span></td>
+  <td><span class="pc">مايو</span><span class="pc">نوفمبر</span><span class="pf">كل 6 أشهر</span></td>
+</tr>
+
+<tr>
+  <td><span class="bn">الوطني - جزيرة وربة</span><span class="bd">2025.11.19 → 2036.02.18</span></td>
+  <td><span class="cp pco">باسم الشركة</span></td>
+  <td>6.0M</td><td>4.5M</td><td>322.5K</td><td>202.5K</td>
+  <td class="pv">120K</td><td class="rv2">8.00%</td>
+  <td><span class="rb rf">ثابت 5.25%</span><br><span class="rb rv">متغير CBK+2.0%</span></td>
+  <td><span class="rb rl">CBK + 1.0%</span></td>
+  <td><span class="pc">مايو</span><span class="pc">نوفمبر</span><span class="pf">كل 6 أشهر</span></td>
+</tr>
+
+<tr style="background:#F0FCF8">
+  <td><span class="bn">وربة بنك - جزيرة وربة</span><span class="bd">2025.05.20 → 2030.05.20</span></td>
+  <td><span class="cp pco">باسم الشركة</span></td>
+  <td>23.0M $</td><td>17.25M $</td><td>1.44M $</td><td>776K $</td>
+  <td class="pv">661K $</td><td class="rv2">11.50%</td>
+  <td><span class="rb ru">دولار ثابت 6.25%</span></td>
+  <td><span class="rb rl">CBK + 1.0%</span></td>
+  <td><span class="pc">مايو</span><span class="pc">نوفمبر</span><span class="pf">كل 6 أشهر</span></td>
+</tr>
+
+<tr style="background:#F0FCF8">
+  <td><span class="bn">بيت التمويل - جزيرة وربة</span><span class="bd">2025.11.20 → 2030.11</span></td>
+  <td><span class="cp pco">باسم الشركة</span></td>
+  <td>60.0M $</td><td>45.0M $</td><td>3.75M $</td><td>2.03M $</td>
+  <td class="pv">1.73M $</td><td class="rv2">11.50%</td>
+  <td><span class="rb ru">دولار ثابت 6.25%</span></td>
+  <td><span class="rb rl">CBK + 1.0%</span></td>
+  <td><span class="pc">مايو</span><span class="pc">نوفمبر</span><span class="pf">كل 6 أشهر</span></td>
+</tr>
+
+<tr style="background:#F5FBF8">
+  <td><span class="bn">برقان - أبوناصر</span><span class="bd">2024.05.08 → 2029.05.09</span></td>
+  <td><span class="cp pow">الملاك</span></td>
+  <td>12.2M</td><td>9.15M</td><td>854K</td><td>411.8K</td>
+  <td class="pv">442.3K</td><td class="rv2">14.50%</td>
+  <td><span class="rb rf">ثابت 7.25%</span><br><span class="rb rv">متغير CBK+3.25%</span></td>
+  <td><span class="rb rl">CBK + 1.0%</span></td>
+  <td><span class="pc">مايو</span><span class="pc">أغسطس</span><span class="pc">نوفمبر</span><span class="pf">كل 3 أشهر</span></td>
+</tr>
+
+<tr style="background:#F5FBF8">
+  <td><span class="bn">برقان - أبوعبدالله</span><span class="bd">2024.05.08 → 2029.05.09</span></td>
+  <td><span class="cp pow">الملاك</span></td>
+  <td>12.0M</td><td>9.0M</td><td>840K</td><td>405K</td>
+  <td class="pv">435K</td><td class="rv2">14.50%</td>
+  <td><span class="rb rf">ثابت 7.25%</span><br><span class="rb rv">متغير CBK+3.25%</span></td>
+  <td><span class="rb rl">CBK + 1.0%</span></td>
+  <td><span class="pc">مايو</span><span class="pc">أغسطس</span><span class="pc">نوفمبر</span><span class="pf">كل 3 أشهر</span></td>
+</tr>
+
+<tr style="background:#F5FBF8">
+  <td><span class="bn">الوطني - أبوناصر</span><span class="bd">2025.11.25 → 2036.02.18</span></td>
+  <td><span class="cp pow">الملاك</span></td>
+  <td>12.0M</td><td>—</td><td>645K</td><td>—</td>
+  <td class="pv">645K</td><td class="rv2">5.38%</td>
+  <td><span class="rb rf">ثابت 5.25%</span><br><span class="rb rv">متغير CBK+2.0%</span></td>
+  <td>—</td>
+  <td><span class="pc">مايو</span><span class="pc">أغسطس</span><span class="pc">نوفمبر</span><span class="pf">كل 3 أشهر</span></td>
+</tr>
+
+<tr style="background:#F5FBF8">
+  <td><span class="bn">الأهلي الكويتي - أبوناصر</span><span class="bd">2025.12.08 → 2035.12.08</span></td>
+  <td><span class="cp pow">الملاك</span></td>
+  <td>600K</td><td>—</td><td>34.5K</td><td>—</td>
+  <td class="pv">34.5K</td><td class="rv2">5.75%</td>
+  <td><span class="rb rf">ثابت 5.75%</span><br><span class="rb rv">متغير CBK+2.25%</span></td>
+  <td>—</td>
+  <td><span class="pc">مايو</span><span class="pc">أغسطس</span><span class="pc">نوفمبر</span><span class="pf">كل 3 أشهر</span></td>
+</tr>
+
+<tr style="background:#FFFBF4">
+  <td><span class="bn">GIG - الخليج للاستثمار</span><span class="bd">→ 2026.11.10</span></td>
+  <td><span class="cp ppr">مشترك</span></td>
+  <td>1.8M</td><td>1.2M</td><td>87.75K</td><td>63K</td>
+  <td class="pv">24.75K</td><td class="rv2">4.13%</td>
+  <td><span class="rb rf">ثابت 4.5%</span><br><span class="rb rv">متغير CBK+1.75%</span></td>
+  <td><span class="rb rl">CBK + 1.75%</span></td>
+  <td><span class="pc">مايو</span><span class="pc">نوفمبر</span><span class="pf">كل 6 أشهر</span></td>
+</tr>
+
+<tr style="background:#FFFBF4">
+  <td><span class="bn">الوطني - الخليج للاستثمار</span><span class="bd">→ 2030.11.18</span></td>
+  <td><span class="cp ppr">مشترك</span></td>
+  <td>300K</td><td>180K</td><td>15.4K</td><td>9K</td>
+  <td class="pv">6.4K</td><td class="rv2">5.31%</td>
+  <td><span class="rb rf">ثابت 4.75%</span><br><span class="rb rv">متغير CBK+2.0%</span></td>
+  <td><span class="rb rl">CBK + 1.5%</span></td>
+  <td><span class="pc">مايو</span><span class="pc">نوفمبر</span><span class="pf">كل 6 أشهر</span></td>
+</tr>
+
+</tbody>
+</table>
+</div>
+
+<div class="sl">تحليل الحساسية — أثر تغير فائدة البنك المركزي على السندات المتغيرة بالدينار</div>
+<div class="sw">
+  <div class="sh">
+    <div>
+      <div class="st">اختر فائدة البنك المركزي (CBK)</div>
+      <div class="ss">السندات بالدولار (وربة بنك + بيت التمويل) مستثناة — فائدتها ثابتة 6.25% غير متأثرة بـ CBK</div>
+    </div>
+    <div>
+      <div class="stepper">
+        <button class="sbtn" id="btn-down">▼</button>
+        <div class="sdisp" id="cbk-disp">3.50%</div>
+        <button class="sbtn" id="btn-up">▲</button>
+      </div>
+      <div class="slbl">كل ضغطة = 0.25% · النطاق: 1.0% — 6.0%</div>
+    </div>
+  </div>
+  <div class="stw">
+  <table class="stbl">
+    <thead><tr>
+      <th>السند</th>
+      <th>صافي الربح الحالي (CBK=3.5%)</th>
+      <th>صافي الربح بعد التغيير</th>
+      <th>قيمة التغير في الربح</th>
+      <th>ROI الحالي (CBK=3.5%)</th>
+      <th>ROI بعد التغيير</th>
+      <th>تغير ROI</th>
+    </tr></thead>
+    <tbody id="stbody"></tbody>
+    <tfoot id="stfoot"></tfoot>
+  </table>
+  </div>
+</div>
+
+<div class="leg">
+  <div class="li"><span class="lsw" style="background:var(--blue-50)"></span>باسم الشركة</div>
+  <div class="li"><span class="lsw" style="background:var(--green-50)"></span>الملاك — ممول من الشركة</div>
+  <div class="li"><span class="lsw" style="background:var(--amber-50)"></span>مشترك — ممول ذاتياً</div>
+  <div class="li"><span class="lsw" style="background:#F0FCF8;border-color:#9FE1CB"></span>سند بالدولار</div>
+  <div class="li"><span class="rb rf" style="font-size:10px">ثابت</span>شريحة ثابتة</div>
+  <div class="li"><span class="rb rv" style="font-size:10px">متغير</span>متغير = CBK + هامش</div>
+  <div class="li"><span class="rb rl" style="font-size:10px">قرض</span>هامش القرض بدون CBK</div>
+</div>
+
+<script>
+// =============================================================
+// المنطق الصحيح المتحقق من الإكسيل:
+// - الشريحة الثابتة: أرباحها ثابتة، لكن فائدة قرضها تتغير بـ CBK
+// - الشريحة المتغيرة: أرباحها وفائدة قرضها كلاهما يتغيران بـ CBK
+// - كل شريحة تحمل نصيبها من القرض (نصف القرض لكل شريحة)
+// - hoanMg = هامش القرض واحد لكلا الشريحتين
+// =============================================================
+const BASE = 3.5;
+const bonds = [
+  {name:'الأهلي الكويتي - العصيمي (2023)',
+   fixedPrin:4000000, fixedRate:6.25,  fixedLoan:0,
+   varPrin:4000000,   varMg:2.25,      varLoan:0,       loanMg:0,    eq:8000000},
+  {name:'الأهلي الكويتي - العصيمي (2025)',
+   fixedPrin:1550000, fixedRate:5.75,  fixedLoan:0,
+   varPrin:1550000,   varMg:2.25,      varLoan:0,       loanMg:0,    eq:3100000},
+  {name:'الأهلي الكويتي - جزيرة وربة (2025 أ)',
+   fixedPrin:50000,   fixedRate:6.25,  fixedLoan:37500,
+   varPrin:50000,     varMg:2.25,      varLoan:37500,   loanMg:1.0,  eq:25000},
+  {name:'الأهلي الكويتي - جزيرة وربة (2025 ب)',
+   fixedPrin:500000,  fixedRate:5.75,  fixedLoan:375000,
+   varPrin:500000,    varMg:2.25,      varLoan:375000,  loanMg:1.0,  eq:250000},
+  {name:'الوطني - جزيرة وربة',
+   fixedPrin:3000000, fixedRate:5.25,  fixedLoan:2250000,
+   varPrin:3000000,   varMg:2.0,       varLoan:2250000, loanMg:1.0,  eq:1500000},
+  {name:'برقان - أبوناصر',
+   fixedPrin:6100000, fixedRate:7.25,  fixedLoan:4575000,
+   varPrin:6100000,   varMg:3.25,      varLoan:4575000, loanMg:1.0,  eq:3050000},
+  {name:'برقان - أبوعبدالله',
+   fixedPrin:6000000, fixedRate:7.25,  fixedLoan:4500000,
+   varPrin:6000000,   varMg:3.25,      varLoan:4500000, loanMg:1.0,  eq:3000000},
+  {name:'الوطني - أبوناصر',
+   fixedPrin:6000000, fixedRate:5.25,  fixedLoan:0,
+   varPrin:6000000,   varMg:2.0,       varLoan:0,       loanMg:0,    eq:12000000},
+  {name:'الأهلي الكويتي - أبوناصر',
+   fixedPrin:300000,  fixedRate:5.75,  fixedLoan:0,
+   varPrin:300000,    varMg:2.25,      varLoan:0,       loanMg:0,    eq:600000},
+  {name:'GIG - الخليج للاستثمار',
+   fixedPrin:900000,  fixedRate:4.5,   fixedLoan:600000,
+   varPrin:900000,    varMg:1.75,      varLoan:600000,  loanMg:1.75, eq:600000},
+  {name:'الوطني - الخليج للاستثمار',
+   fixedPrin:150000,  fixedRate:4.75,  fixedLoan:90000,
+   varPrin:150000,    varMg:2.0,       varLoan:90000,   loanMg:1.5,  eq:120000},
+];
+
+function calc(b, cbk) {
+  // الشريحة الثابتة: أرباح ثابتة — فائدة القرض تتغير بـ CBK
+  const fixedInc  = b.fixedPrin * b.fixedRate / 100;
+  const fixedLoan = b.fixedLoan * (cbk + b.loanMg) / 100;
+  // الشريحة المتغيرة: الأرباح والقرض كلاهما يتغيران بـ CBK
+  const varInc    = b.varPrin * (cbk + b.varMg) / 100;
+  const varLoan   = b.varLoan * (cbk + b.loanMg) / 100;
+  const net = (fixedInc - fixedLoan) + (varInc - varLoan);
+  const roi = b.eq > 0 ? (net / b.eq) * 100 : 0;
+  return { net, roi };
+}
+
+function fmtN(n) {
+  const a = Math.abs(n);
+  if (a >= 1000000) return (n/1000000).toFixed(3) + 'M';
+  if (a >= 1000)    return (n/1000).toFixed(1) + 'K';
+  return n.toFixed(0);
+}
+function fmtR(r) { return r.toFixed(2) + '%'; }
+function delta(n, isPct) {
+  const s = (n >= 0 ? '+' : '') + (isPct ? fmtR(n) : fmtN(n));
+  const ab = Math.abs(n);
+  const cls = ab < (isPct ? 0.005 : 5) ? 'dz' : n > 0 ? 'dp' : 'dn';
+  const arr = ab < (isPct ? 0.005 : 5) ? '' : n > 0 ? ' ▲' : ' ▼';
+  return `<span class="${cls}">${s}${arr}</span>`;
+}
+
+let cbk = BASE;
+const MIN = 1.0, MAX = 6.0, STEP = 0.25;
+
+function render() {
+  document.getElementById('cbk-disp').textContent = cbk.toFixed(2) + '%';
+  let totBase = 0, totNew = 0, rows = '';
+
+  bonds.forEach(b => {
+    const base = calc(b, BASE);
+    const curr = calc(b, cbk);
+    totBase += base.net;
+    totNew  += curr.net;
+    rows += `<tr>
+      <td style="font-weight:500">${b.name}</td>
+      <td>${fmtN(base.net)}</td>
+      <td style="color:var(--green-600);font-weight:600">${fmtN(curr.net)}</td>
+      <td>${delta(curr.net - base.net, false)}</td>
+      <td>${fmtR(base.roi)}</td>
+      <td style="color:var(--blue-600);font-weight:600">${fmtR(curr.roi)}</td>
+      <td>${delta(curr.roi - base.roi, true)}</td>
+    </tr>`;
+  });
+
+  document.getElementById('stbody').innerHTML = rows;
+  const d = totNew - totBase;
+  document.getElementById('stfoot').innerHTML = `<tr>
+    <td>الإجمالي (سندات الدينار المتغيرة)</td>
+    <td>${fmtN(totBase)}</td>
+    <td style="color:var(--green-600)">${fmtN(totNew)}</td>
+    <td>${delta(d, false)}</td>
+    <td colspan="3" style="color:var(--text-muted);font-size:11px">
+      ${d >= 0 ? '<span class="dp">▲ تحسن إجمالي</span>' : '<span class="dn">▼ تراجع إجمالي</span>'}
+      في صافي الربح عند CBK = ${cbk.toFixed(2)}%
+    </td>
+  </tr>`;
+}
+
+document.getElementById('btn-up').onclick   = () => { if (cbk < MAX) { cbk = +(cbk + STEP).toFixed(2); render(); } };
+document.getElementById('btn-down').onclick = () => { if (cbk > MIN) { cbk = +(cbk - STEP).toFixed(2); render(); } };
+render();
+</script>
+</body>
+</html>
