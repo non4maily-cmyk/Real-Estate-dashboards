@@ -280,12 +280,12 @@ body{font-family:'IBM Plex Sans Arabic','Segoe UI',sans-serif;background:var(--b
 </table>
 </div>
 
-<div class="sl">تحليل الحساسية — أثر تغير فائدة البنك المركزي على السندات المتغيرة بالدينار</div>
+<div class="sl">تحليل الحساسية — أثر تغير فائدة البنك المركزي على سندات الدينار والدولار</div>
 <div class="sw">
   <div class="sh">
     <div>
       <div class="st">اختر فائدة البنك المركزي (CBK)</div>
-      <div class="ss">السندات بالدولار (وربة بنك + بيت التمويل) مستثناة — فائدتها ثابتة 6.25% غير متأثرة بـ CBK</div>
+      <div class="ss">سندات الدولار (وربة بنك + بيت التمويل) مضمّنة — أرباحها ثابتة 6.25%، والتأثر بـ CBK من جهة فائدة القرض فقط. إجماليها معروض بالدولار بشكل مستقل عن إجمالي الدينار</div>
     </div>
     <div>
       <div class="stepper">
@@ -368,6 +368,18 @@ const bonds = [
    varPrin:150000,    varMg:2.0,       varLoan:90000,   loanMg:1.5,  eq:120000},
 ];
 
+// السندات بالدولار: لا شريحة متغيرة (varPrin/varMg/varLoan = 0) —
+// الأرباح ثابتة 6.25% ولا تتأثر بـ CBK، لكن القرض بالكامل يحمل هامش CBK+1%
+// فتأثير CBK عليها يظهر فقط من جهة تكلفة القرض. تُعرض بعملة $ مستقلة عن إجمالي الدينار.
+const usdBonds = [
+  {name:'وربة بنك - جزيرة وربة', currency:'USD',
+   fixedPrin:23000000, fixedRate:6.25, fixedLoan:17250000,
+   varPrin:0,          varMg:0,        varLoan:0,          loanMg:1.0, eq:5750000},
+  {name:'بيت التمويل - جزيرة وربة', currency:'USD',
+   fixedPrin:60000000, fixedRate:6.25, fixedLoan:45000000,
+   varPrin:0,          varMg:0,        varLoan:0,          loanMg:1.0, eq:15000000},
+];
+
 function calc(b, cbk) {
   // الشريحة الثابتة: أرباح ثابتة — فائدة القرض تتغير بـ CBK
   const fixedInc  = b.fixedPrin * b.fixedRate / 100;
@@ -387,8 +399,10 @@ function fmtN(n) {
   return n.toFixed(0);
 }
 function fmtR(r) { return r.toFixed(2) + '%'; }
-function delta(n, isPct) {
-  const s = (n >= 0 ? '+' : '') + (isPct ? fmtR(n) : fmtN(n));
+function fmtUSD(n) { return '$' + fmtN(n); }
+function delta(n, isPct, fmt) {
+  const f = fmt || fmtN;
+  const s = (n >= 0 ? '+' : '') + (isPct ? fmtR(n) : f(n));
   const ab = Math.abs(n);
   const cls = ab < (isPct ? 0.005 : 5) ? 'dz' : n > 0 ? 'dp' : 'dn';
   const arr = ab < (isPct ? 0.005 : 5) ? '' : n > 0 ? ' ▲' : ' ▼';
@@ -400,34 +414,58 @@ const MIN = 1.0, MAX = 6.0, STEP = 0.25;
 
 function render() {
   document.getElementById('cbk-disp').textContent = cbk.toFixed(2) + '%';
-  let totBase = 0, totNew = 0, rows = '';
 
-  bonds.forEach(b => {
-    const base = calc(b, BASE);
-    const curr = calc(b, cbk);
-    totBase += base.net;
-    totNew  += curr.net;
-    rows += `<tr>
-      <td style="font-weight:500">${b.name}</td>
-      <td>${fmtN(base.net)}</td>
-      <td style="color:var(--green-600);font-weight:600">${fmtN(curr.net)}</td>
-      <td>${delta(curr.net - base.net, false)}</td>
-      <td>${fmtR(base.roi)}</td>
-      <td style="color:var(--blue-600);font-weight:600">${fmtR(curr.roi)}</td>
-      <td>${delta(curr.roi - base.roi, true)}</td>
-    </tr>`;
-  });
+  function buildRows(list, fmt) {
+    let totBase = 0, totNew = 0, rows = '';
+    list.forEach(b => {
+      const base = calc(b, BASE);
+      const curr = calc(b, cbk);
+      totBase += base.net;
+      totNew  += curr.net;
+      rows += `<tr>
+        <td style="font-weight:500">${b.name}</td>
+        <td>${fmt(base.net)}</td>
+        <td style="color:var(--green-600);font-weight:600">${fmt(curr.net)}</td>
+        <td>${delta(curr.net - base.net, false, fmt)}</td>
+        <td>${fmtR(base.roi)}</td>
+        <td style="color:var(--blue-600);font-weight:600">${fmtR(curr.roi)}</td>
+        <td>${delta(curr.roi - base.roi, true)}</td>
+      </tr>`;
+    });
+    return { rows, totBase, totNew };
+  }
 
-  document.getElementById('stbody').innerHTML = rows;
-  const d = totNew - totBase;
+  const kwd = buildRows(bonds, fmtN);
+  const usd = buildRows(usdBonds, fmtUSD);
+
+  const divider = `<tr>
+    <td colspan="7" style="background:#F0FCF8;color:var(--text-muted);font-size:11px;font-weight:600;padding:6px 12px">
+      السندات بالدولار — أرباح ثابتة 6.25%، والتأثر بـ CBK من جهة فائدة القرض (CBK+1%) فقط
+    </td>
+  </tr>`;
+
+  document.getElementById('stbody').innerHTML = kwd.rows + divider + usd.rows;
+
+  const dKwd = kwd.totNew - kwd.totBase;
+  const dUsd = usd.totNew - usd.totBase;
   document.getElementById('stfoot').innerHTML = `<tr>
     <td>الإجمالي (سندات الدينار المتغيرة)</td>
-    <td>${fmtN(totBase)}</td>
-    <td style="color:var(--green-600)">${fmtN(totNew)}</td>
-    <td>${delta(d, false)}</td>
+    <td>${fmtN(kwd.totBase)}</td>
+    <td style="color:var(--green-600)">${fmtN(kwd.totNew)}</td>
+    <td>${delta(dKwd, false, fmtN)}</td>
     <td colspan="3" style="color:var(--text-muted);font-size:11px">
-      ${d >= 0 ? '<span class="dp">▲ تحسن إجمالي</span>' : '<span class="dn">▼ تراجع إجمالي</span>'}
+      ${dKwd >= 0 ? '<span class="dp">▲ تحسن إجمالي</span>' : '<span class="dn">▼ تراجع إجمالي</span>'}
       في صافي الربح عند CBK = ${cbk.toFixed(2)}%
+    </td>
+  </tr>
+  <tr style="background:#F8FCFB">
+    <td>الإجمالي (سندات الدولار)</td>
+    <td>${fmtUSD(usd.totBase)}</td>
+    <td style="color:var(--green-600)">${fmtUSD(usd.totNew)}</td>
+    <td>${delta(dUsd, false, fmtUSD)}</td>
+    <td colspan="3" style="color:var(--text-muted);font-size:11px">
+      ${dUsd >= 0 ? '<span class="dp">▲ تحسن إجمالي</span>' : '<span class="dn">▼ تراجع إجمالي</span>'}
+      في صافي الربح عند CBK = ${cbk.toFixed(2)}% — منفصل عن إجمالي الدينار (عملة مختلفة)
     </td>
   </tr>`;
 }
