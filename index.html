@@ -417,6 +417,22 @@ const LINKS = {
   properties:  "https://non4maily-cmyk.github.io/Real-Estate-dashboards/dashboard_properties"
 };
 
+// ══ الفترة الزمنية الديناميكية (يناير → الشهر الحالي) ══
+const ARABIC_MONTHS = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+
+function updatePeriodLabel() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const monthIdx = now.getMonth(); // 0 = يناير
+  const currentMonthName = ARABIC_MONTHS[monthIdx];
+  const label = (monthIdx === 0)
+    ? currentMonthName + " " + year
+    : ARABIC_MONTHS[0] + " — " + currentMonthName + " " + year;
+  const el = document.getElementById("period-label");
+  if (el) el.textContent = label;
+}
+updatePeriodLabel();
+
 // ══ STATE ══
 let currentMode = null;
 let currentPortfolio = null;
