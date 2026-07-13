@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة تحكم محفظة القروض</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap');
+:root{
+  --blue-50:#E6F1FB;--blue-100:#B5D4F4;--blue-600:#185FA5;--blue-800:#0C447C;
+  --green-50:#E1F5EE;--green-600:#0F6E56;--green-800:#085041;
+  --coral-50:#FAECE7;--coral-600:#993C1D;
+  --amber-50:#FAEEDA;--amber-600:#854F0B;--amber-800:#633806;
+  --purple-50:#EEEDFE;--purple-600:#5B4FCF;--purple-800:#3C3489;
+  --pink-50:#FBEAF0;--pink-600:#A83B60;--pink-800:#72243E;
+  --gray-50:#F8F9FC;--gray-100:#F1EFE8;--gray-200:#D3D1C7;--gray-400:#888780;--gray-800:#444441;
+  --bg:#F4F6FA;--surface:#FFFFFF;--border:rgba(0,0,0,0.07);
+  --text-primary:#1A1C23;--text-secondary:#6B7280;--text-muted:#9CA3AF;
+  --r-md:10px;--r-lg:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans Arabic','Segoe UI',sans-serif;background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.6;min-height:100vh;padding:24px}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px}
+.ph-title{font-size:20px;font-weight:600}
+.ph-sub{font-size:12px;color:var(--text-muted);margin-top:3px}
+.ph-date{font-size:12px;color:var(--text-muted);background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:4px 12px}
+.sl{font-size:10.5px;font-weight:600;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:22px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;right:0;width:4px;height:100%}
+.kb::before{background:var(--blue-600)}.kc::before{background:var(--coral-600)}
+.kg::before{background:var(--gray-400)}.kn::before{background:var(--green-600)}
+.ka::before{background:var(--amber-600)}
+.ki{font-size:20px;margin-bottom:10px;opacity:.85}
+.kl{font-size:11px;color:var(--text-secondary);margin-bottom:4px}
+.kv{font-size:22px;font-weight:600;line-height:1.1}
+.kv.b{color:var(--blue-600)}.kv.n{color:var(--green-600)}.kv.c{color:var(--coral-600)}.kv.a{color:var(--amber-600)}.kv.g{color:var(--gray-800)}
+.ks{font-size:11px;color:var(--text-muted);margin-top:4px}
+
+/* DISTRIBUTION CARDS */
+.lr{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:22px}
+.lc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px}
+.lt{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.lb{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+.lo{font-size:10px;color:var(--text-muted);background:var(--gray-50);border:1px solid var(--border);border-radius:20px;padding:2px 9px;white-space:nowrap}
+.la{font-size:21px;font-weight:600;margin-bottom:2px}
+.lp{font-size:11px;color:var(--text-muted);margin-bottom:10px}
+.bt{height:5px;background:var(--gray-100);border-radius:3px;overflow:hidden}
+.bf{height:5px;border-radius:3px}
+.icn{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+
+/* ACCORDION */
+.acc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);margin-bottom:12px;overflow:hidden}
+.acc summary{list-style:none;cursor:pointer;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.acc summary::-webkit-details-marker{display:none}
+.acc-l{display:flex;align-items:center;gap:12px;min-width:230px}
+.acc-icn{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.acc-tt{font-size:14px;font-weight:600}
+.acc-tg{font-size:11px;color:var(--text-muted);margin-top:2px}
+.acc-mid{display:flex;gap:22px;flex-wrap:wrap;font-size:12px}
+.acc-stat-l{font-size:10.5px;color:var(--text-muted);margin-bottom:2px}
+.acc-stat-v{font-size:14px;font-weight:600}
+.chev{font-size:13px;color:var(--text-muted);transition:transform .2s;flex-shrink:0}
+.acc[open] .chev{transform:rotate(180deg)}
+.acc-body{padding:2px 18px 18px}
+.acc-rate{font-size:11.5px;color:var(--text-secondary);background:var(--gray-50);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:12px;display:inline-block}
+.acc-rate b{color:var(--text-primary)}
+
+/* TABLE */
+.tw{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;overflow-x:auto}
+.acc .tw{border:1px solid var(--border)}
+.bt2{width:100%;border-collapse:collapse;font-size:12px;min-width:820px}
+.bt2 th{background:var(--gray-50);color:var(--text-muted);font-weight:600;padding:9px 11px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap;font-size:10.5px}
+.bt2 td{padding:9px 11px;border-bottom:1px solid rgba(0,0,0,0.04);color:var(--text-primary);text-align:right;vertical-align:middle;white-space:nowrap}
+.bt2 tr:last-child td{border-bottom:none}
+.bt2 tr:hover td{background:rgba(0,0,0,.012)}
+.bt2 tfoot td{background:var(--gray-50);font-weight:600;border-top:2px solid var(--border)}
+.zero{color:var(--text-muted)}
+
+/* TIMELINE */
+.tl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px 18px 14px;margin-bottom:22px}
+.tl-chart{display:flex;align-items:flex-end;gap:14px;height:170px;padding:0 4px;margin-bottom:6px}
+.tl-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.tl-val{font-size:12px;font-weight:600;margin-bottom:6px;white-space:nowrap}
+.tl-cnt{font-size:10px;color:var(--text-muted);margin-bottom:6px}
+.tl-bar{width:100%;max-width:56px;border-radius:6px 6px 0 0;transition:opacity .15s}
+.tl-bar:hover{opacity:.85}
+.tl-date{font-size:11px;color:var(--text-secondary);margin-top:8px;font-weight:500;text-align:center}
+.tl-note{font-size:11px;color:var(--text-muted);margin-top:4px;text-align:center}
+
+/* SENSITIVITY */
+.sw{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;margin-bottom:22px}
+.sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.st{font-size:14px;font-weight:600}
+.ss{font-size:11px;color:var(--text-muted);margin-top:3px;max-width:520px}
+.stepper{display:flex;align-items:center;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;background:var(--surface)}
+.sbtn{width:40px;height:44px;border:none;background:var(--gray-50);cursor:pointer;font-size:18px;color:var(--blue-600);display:flex;align-items:center;justify-content:center;transition:background .15s;font-family:inherit}
+.sbtn:hover{background:var(--blue-50)}
+.sbtn:active{background:var(--blue-100)}
+.sdisp{min-width:90px;text-align:center;padding:0 14px;font-size:22px;font-weight:700;color:var(--blue-600);border-left:1px solid var(--border);border-right:1px solid var(--border);line-height:44px}
+.slbl{font-size:10px;color:var(--text-muted);text-align:center;margin-top:4px}
+.stw{overflow-x:auto}
+.stbl{width:100%;border-collapse:collapse;font-size:12px;min-width:640px}
+.stbl th{background:var(--gray-50);color:var(--text-muted);font-weight:600;padding:9px 12px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap;font-size:11px}
+.stbl td{padding:9px 12px;border-bottom:1px solid rgba(0,0,0,0.04);text-align:right;color:var(--text-primary)}
+.stbl tr:last-child td{border-bottom:none}
+.stbl tr:hover td{background:rgba(0,0,0,.012)}
+.stbl tfoot tr td{border-top:2px solid var(--border);background:var(--gray-50);font-weight:600}
+.dp{color:var(--coral-600);font-weight:500}
+.dn{color:var(--green-600);font-weight:500}
+.dz{color:var(--text-muted)}
+
+/* LEGEND */
+.leg{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;font-size:11.5px;color:var(--text-secondary);line-height:1.9}
+.leg b{color:var(--text-primary)}
+.leg ul{padding-right:18px;margin-top:4px}
+
+@media(max-width:900px){
+  .kpi-row{grid-template-columns:1fr}
+  .lr{grid-template-columns:1fr}
+  .acc-mid{gap:14px}
+  body{padding:14px}
+  .tl-chart{height:140px}
+}
+</style>
+</head>
+<body>
+
+<div class="ph">
+  <div>
+    <div class="ph-title">لوحة تحكم محفظة القروض</div>
+    <div class="ph-sub">تسهيلات بيت التمويل (تورق وإجارة) وبنك الخليج — مرتبطة بسعر الفائدة المركزي (CBK)</div>
+  </div>
+  <div class="ph-date">دينار كويتي (د.ك) · بيانات 2026</div>
+</div>
+
+<!-- KPI ROW -->
+<div class="sl">ملخص المحفظة</div>
+<div class="kpi-row">
+  <div class="kpi kb"><div class="ki" style="color:var(--blue-600)">💼</div><div class="kl">إجمالي محفظة القروض</div><div class="kv b">163.16M</div><div class="ks">15 قرضاً ضمن 4 تسهيلات</div></div>
+  <div class="kpi ka"><div class="ki" style="color:var(--amber-600)">🏠</div><div class="kl">إجمالي الفائض التقديري بالضمانات</div><div class="kv a">134.59M</div><div class="ks">فائض العقارات المرهونة عن الحد المطلوب</div></div>
+  <div class="kpi kc"><div class="ki" style="color:var(--coral-600)">⏱️</div><div class="kl">فوائد مستحقة عند التجديدات القادمة</div><div class="kv c">5.07M</div><div class="ks">إجمالي عبر كل تسهيلات المحفظة</div></div>
+</div>
+
+<!-- DISTRIBUTION BY FINANCING SOURCE -->
+<div class="sl">التوزيع حسب مصدر التمويل</div>
+<div class="lr">
+  <div class="lc">
+    <div class="lt"><div class="lb"><span class="icn" style="background:var(--blue-50)">🕌</span>بيت التمويل — تورق</div></div>
+    <div class="la" style="color:var(--blue-600)">75.06M</div><div class="lp">46.0% من إجمالي المحفظة · د.ك</div>
+    <div class="bt"><div class="bf" style="width:46.0%;background:var(--blue-600)"></div></div>
+  </div>
+  <div class="lc">
+    <div class="lt"><div class="lb"><span class="icn" style="background:var(--green-50)">🏠</span>بيت التمويل — إجارة</div></div>
+    <div class="la" style="color:var(--green-600)">38.40M</div><div class="lp">23.5% من إجمالي المحفظة · د.ك</div>
+    <div class="bt"><div class="bf" style="width:23.5%;background:var(--green-600)"></div></div>
+  </div>
+  <div class="lc">
+    <div class="lt"><div class="lb"><span class="icn" style="background:var(--amber-50)">🏦</span>بنك الخليج</div></div>
+    <div class="la" style="color:var(--amber-600)">49.70M</div><div class="lp">30.5% من إجمالي المحفظة · د.ك</div>
+    <div class="bt"><div class="bf" style="width:30.5%;background:var(--amber-600)"></div></div>
+  </div>
+</div>
+
+<!-- DISTRIBUTION BY BORROWING ENTITY -->
+<div class="sl">التوزيع حسب الجهة المُقترضة</div>
+<div class="lr">
+  <div class="lc">
+    <div class="lt"><div class="lb"><span class="icn" style="background:var(--coral-50)">🏗️</span>شركة الانشاءات الشرقية</div><span class="lo">تورق + بنك الخليج</span></div>
+    <div class="la" style="color:var(--coral-600)">91.55M</div><div class="lp">56.1% من إجمالي المحفظة · د.ك</div>
+    <div class="bt"><div class="bf" style="width:56.1%;background:var(--coral-600)"></div></div>
+  </div>
+  <div class="lc">
+    <div class="lt"><div class="lb"><span class="icn" style="background:var(--purple-50)">🏢</span>شركة العصيمي</div><span class="lo">تورق</span></div>
+    <div class="la" style="color:var(--purple-600)">33.21M</div><div class="lp">20.4% من إجمالي المحفظة · د.ك</div>
+    <div class="bt"><div class="bf" style="width:20.4%;background:var(--purple-600)"></div></div>
+  </div>
+  <div class="lc">
+    <div class="lt"><div class="lb"><span class="icn" style="background:var(--pink-50)">🏝️</span>شركة جزيرة وربة</div><span class="lo">إجارة</span></div>
+    <div class="la" style="color:var(--pink-600)">38.40M</div><div class="lp">23.5% من إجمالي المحفظة · د.ك</div>
+    <div class="bt"><div class="bf" style="width:23.5%;background:var(--pink-600)"></div></div>
+  </div>
+</div>
+
+<!-- RENEWAL TIMELINE -->
+<div class="sl">التقويم الزمني لاستحقاقات التجديد</div>
+<div class="tl-wrap">
+  <div style="font-size:11px;color:var(--text-muted);margin-bottom:16px">القيم تمثل إجمالي الفائدة المستحقة + أصل القرض المستحق عند كل موعد تجديد (مجموع العمودين H + I)</div>
+  <div class="tl-chart">
+    <div class="tl-col">
+      <div class="tl-val">132.5K</div><div class="tl-cnt">بيت التمويل – الانشاءات الشرقية</div>
+      <div class="tl-bar" style="height:11px;background:var(--amber-600)"></div>
+      <div class="tl-date">26 أغسطس 2026</div>
+    </div>
+    <div class="tl-col">
+      <div class="tl-val">553.7K</div><div class="tl-cnt">بنك الخليج – الانشاءات الشرقية</div>
+      <div class="tl-bar" style="height:48px;background:var(--coral-600)"></div>
+      <div class="tl-date">30 سبتمبر 2026</div>
+    </div>
+    <div class="tl-col">
+      <div class="tl-val">1.97M</div><div class="tl-cnt">بيت التمويل – الشرقية + العصيمي</div>
+      <div class="tl-bar" style="height:170px;background:var(--coral-600)"></div>
+      <div class="tl-date">31 ديسمبر 2026</div>
+    </div>
+    <div class="tl-col">
+      <div class="tl-val">238.9K</div><div class="tl-cnt">بيت التمويل – جزيرة وربة</div>
+      <div class="tl-bar" style="height:21px;background:var(--green-600)"></div>
+      <div class="tl-date">9 يناير 2027</div>
+    </div>
+    <div class="tl-col">
+      <div class="tl-val">1.09M</div><div class="tl-cnt">بيت التمويل – الشرقية + جزيرة وربة</div>
+      <div class="tl-bar" style="height:94px;background:var(--blue-600)"></div>
+      <div class="tl-date">1 فبراير 2027</div>
+    </div>
+    <div class="tl-col">
+      <div class="tl-val">1.17M</div><div class="tl-cnt">بيت التمويل – جزيرة وربة</div>
+      <div class="tl-bar" style="height:101px;background:var(--blue-600)"></div>
+      <div class="tl-date">28 فبراير 2027</div>
+    </div>
+  </div>
+</div>
+
+<!-- FACILITY DETAILS -->
+<div class="sl">تفاصيل التسهيلات التمويلية</div>
+
+<details class="acc" open>
+  <summary>
+    <div class="acc-l"><span class="acc-icn" style="background:var(--blue-50)">🕌</span>
+      <div><div class="acc-tt">بيت التمويل — تورق · شركة الانشاءات الشرقية</div><div class="acc-tg">7 قروض فرعية</div></div>
+    </div>
+    <div class="acc-mid">
+      <div><div class="acc-stat-l">قيمة التسهيل</div><div class="acc-stat-v" style="color:var(--blue-600)">41.85M</div></div>
+      <div><div class="acc-stat-l">نسبة التغطية</div><div class="acc-stat-v">1.30x</div></div>
+      <div><div class="acc-stat-l">الفائض التقديري</div><div class="acc-stat-v">72.99M</div></div>
+    </div>
+    <span class="chev">▼</span>
+  </summary>
+  <div class="acc-body">
+    <span class="acc-rate">هامش البنك <b>0.75%</b> (باستثناء قرضين بهامش 1.50%) + مركزي <b>3.50%</b> = إجمالي حتى <b>4.25% / 5.00%</b></span>
+    <div class="tw"><table class="bt2">
+      <thead><tr><th>رقم القرض</th><th>قيمة القرض الحالية</th><th>هامش البنك</th><th>المسدد من الأصل 2026</th><th>مستحق أصل غير مسدد</th><th>مستحق فوائد غير مسدد</th><th>موعد التجديد القادم</th><th>فائدة مستحقة عند التجديد</th><th>أصل مستحق عند التجديد</th></tr></thead>
+      <tbody>
+        <tr><td>الأول</td><td>4,479,159</td><td>0.75%</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2026-12-31</td><td>189,843</td><td>4,479</td></tr>
+        <tr><td>الثاني</td><td>4,755,761</td><td>0.75%</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2026-12-31</td><td>201,566</td><td>4,756</td></tr>
+        <tr><td>الثالث</td><td>2,862,521</td><td>0.75%</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2026-12-31</td><td>121,324</td><td>2,863</td></tr>
+        <tr><td>الرابع</td><td>10,000,000</td><td>0.75%</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2027-02-01</td><td>425,000</td><td>10,000</td></tr>
+        <tr><td>الخامس</td><td>10,000,000</td><td>0.75%</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2027-02-01</td><td>414,521</td><td>10,000</td></tr>
+        <tr><td>السادس</td><td>6,000,000</td><td>1.50%</td><td class="zero">0</td><td>6,000</td><td>73,151</td><td>2026-08-26</td><td>75,541</td><td>5,994</td></tr>
+        <tr><td>السابع</td><td>3,750,000</td><td>1.50%</td><td class="zero">0</td><td>3,750</td><td>44,178</td><td>2026-08-26</td><td>47,213</td><td>3,746</td></tr>
+      </tbody>
+      <tfoot><tr><td>الإجمالي</td><td>41,847,441</td><td>—</td><td>0</td><td>9,750</td><td>117,329</td><td>—</td><td>1,475,007</td><td>41,838</td></tr></tfoot>
+    </table></div>
+  </div>
+</details>
+
+<details class="acc">
+  <summary>
+    <div class="acc-l"><span class="acc-icn" style="background:var(--blue-50)">🕌</span>
+      <div><div class="acc-tt">بيت التمويل — تورق · شركة العصيمي</div><div class="acc-tg">3 قروض فرعية</div></div>
+    </div>
+    <div class="acc-mid">
+      <div><div class="acc-stat-l">قيمة التسهيل</div><div class="acc-stat-v" style="color:var(--blue-600)">33.21M</div></div>
+      <div><div class="acc-stat-l">نسبة التغطية</div><div class="acc-stat-v">1.30x</div></div>
+      <div><div class="acc-stat-l">الفائض التقديري</div><div class="acc-stat-v">25.82M</div></div>
+    </div>
+    <span class="chev">▼</span>
+  </summary>
+  <div class="acc-body">
+    <span class="acc-rate">هامش البنك <b>0.75%</b> + مركزي <b>3.50%</b> = إجمالي الفائدة <b>4.25%</b></span>
+    <div class="tw"><table class="bt2">
+      <thead><tr><th>رقم القرض</th><th>قيمة القرض الحالية</th><th>هامش البنك</th><th>المسدد من الأصل 2026</th><th>مستحق أصل غير مسدد</th><th>مستحق فوائد غير مسدد</th><th>موعد التجديد القادم</th><th>فائدة مستحقة عند التجديد</th><th>أصل مستحق عند التجديد</th></tr></thead>
+      <tbody>
+        <tr><td>الأول</td><td>20,426,007</td><td>0.75%</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2026-12-31</td><td>865,727</td><td>20,426</td></tr>
+        <tr><td>الثاني</td><td>4,720,336</td><td>0.75%</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2026-12-31</td><td>200,065</td><td>4,720</td></tr>
+        <tr><td>الثالث</td><td>8,062,278</td><td>0.75%</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2026-12-31</td><td>341,708</td><td>8,062</td></tr>
+      </tbody>
+      <tfoot><tr><td>الإجمالي</td><td>33,208,621</td><td>—</td><td>0</td><td>0</td><td>0</td><td>—</td><td>1,407,500</td><td>33,209</td></tr></tfoot>
+    </table></div>
+  </div>
+</details>
+
+<details class="acc">
+  <summary>
+    <div class="acc-l"><span class="acc-icn" style="background:var(--green-50)">🏠</span>
+      <div><div class="acc-tt">بيت التمويل — إجارة · شركة جزيرة وربة</div><div class="acc-tg">3 قروض فرعية</div></div>
+    </div>
+    <div class="acc-mid">
+      <div><div class="acc-stat-l">قيمة التسهيل</div><div class="acc-stat-v" style="color:var(--green-600)">38.40M</div></div>
+      <div><div class="acc-stat-l">نسبة التغطية</div><div class="acc-stat-v">2.00x</div></div>
+      <div><div class="acc-stat-l">الفائض التقديري</div><div class="acc-stat-v">33.54M</div></div>
+    </div>
+    <span class="chev">▼</span>
+  </summary>
+  <div class="acc-body">
+    <span class="acc-rate">هامش البنك <b>0.75%</b> + مركزي <b>3.50%</b> = إجمالي الفائدة <b>4.25%</b></span>
+    <div class="tw"><table class="bt2">
+      <thead><tr><th>رقم القرض</th><th>قيمة القرض الحالية</th><th>هامش البنك</th><th>المسدد من الأصل 2026</th><th>مستحق أصل غير مسدد</th><th>مستحق فوائد غير مسدد</th><th>موعد التجديد القادم</th><th>فائدة مستحقة عند التجديد</th><th>أصل مستحق عند التجديد</th></tr></thead>
+      <tbody>
+        <tr><td>الأول</td><td>27,450,000</td><td>0.75%</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2027-02-28</td><td>1,166,625</td><td class="zero">0</td></tr>
+        <tr><td>الثاني</td><td>5,620,000</td><td>0.75%</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2027-01-09</td><td>238,850</td><td class="zero">0</td></tr>
+        <tr><td>الثالث</td><td>5,325,000</td><td>0.75%</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2027-02-01</td><td>226,313</td><td class="zero">0</td></tr>
+      </tbody>
+      <tfoot><tr><td>الإجمالي</td><td>38,395,000</td><td>—</td><td>0</td><td>0</td><td>0</td><td>—</td><td>1,631,788</td><td>0</td></tr></tfoot>
+    </table></div>
+  </div>
+</details>
+
+<details class="acc">
+  <summary>
+    <div class="acc-l"><span class="acc-icn" style="background:var(--amber-50)">🏦</span>
+      <div><div class="acc-tt">بنك الخليج · شركة الانشاءات الشرقية</div><div class="acc-tg">قرض مدور + قرض غير مدور</div></div>
+    </div>
+    <div class="acc-mid">
+      <div><div class="acc-stat-l">قيمة التسهيل</div><div class="acc-stat-v" style="color:var(--amber-600)">49.70M</div></div>
+      <div><div class="acc-stat-l">نسبة التغطية</div><div class="acc-stat-v">1.40x</div></div>
+      <div><div class="acc-stat-l">الفائض التقديري</div><div class="acc-stat-v">2.24M</div></div>
+    </div>
+    <span class="chev">▼</span>
+  </summary>
+  <div class="acc-body">
+    <span class="acc-rate">حد التسهيل المدور <b>10.00M</b> (مستخدم 9.70M / متاح 0.30M) هامش <b>1.00%</b> · غير مدور <b>40.00M</b> هامش <b>0.90%</b> · + مركزي <b>3.50%</b></span>
+    <div class="tw"><table class="bt2">
+      <thead><tr><th>رقم القرض</th><th>قيمة القرض الحالية</th><th>هامش البنك</th><th>المسدد من الأصل 2026</th><th>مستحق أصل غير مسدد</th><th>مستحق فوائد غير مسدد</th><th>موعد الفائدة القادم</th><th>فائدة مستحقة عند التجديد</th><th>أصل مستحق عند التجديد</th></tr></thead>
+      <tbody>
+        <tr><td>القرض المدور</td><td>9,704,918</td><td>1.00%</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2026-09-30</td><td>110,078</td><td class="zero">0</td></tr>
+        <tr><td>القرض الغير مدور</td><td>40,000,000</td><td>0.90%</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2026-09-30</td><td>443,616</td><td class="zero">0</td></tr>
+      </tbody>
+      <tfoot><tr><td>الإجمالي</td><td>49,704,918</td><td>—</td><td>0</td><td>0</td><td>0</td><td>—</td><td>553,694</td><td>0</td></tr></tfoot>
+    </table></div>
+  </div>
+</details>
+
+<!-- SENSITIVITY -->
+<div class="sl" style="margin-top:22px">تحليل حساسية سعر الفائدة المركزي (CBK)</div>
+<div class="sw">
+  <div class="sh">
+    <div>
+      <div class="st">اختر سعر الفائدة المركزي (CBK)</div>
+      <div class="ss">كل قروض المحفظة مُسعّرة على أساس هامش بنك ثابت لكل قرض + سعر المركزي الحالي 3.50%. الجدول يعيد احتساب <b>التكلفة السنوية الافتراضية للفائدة</b> (بافتراض احتساب سنة كاملة على كامل الأصل القائم) عند تغيّر CBK — وهي أداة تحليل "ماذا لو"، وليست الفائدة الفعلية المستحقة عند التجديد الموضحة أعلاه.</div>
+    </div>
+    <div>
+      <div class="stepper">
+        <button class="sbtn" id="btn-down">▼</button>
+        <div class="sdisp" id="cbk-disp">3.50%</div>
+        <button class="sbtn" id="btn-up">▲</button>
+      </div>
+      <div class="slbl">كل ضغطة = 0.25% · النطاق: 1.0% — 6.0%</div>
+    </div>
+  </div>
+  <div class="stw">
+  <table class="stbl">
+    <thead><tr>
+      <th>التسهيل</th>
+      <th>تكلفة الفائدة السنوية الحالية (CBK=3.5%)</th>
+      <th>تكلفة الفائدة بعد التغيير</th>
+      <th>قيمة التغيير</th>
+    </tr></thead>
+    <tbody id="stbody"></tbody>
+    <tfoot id="stfoot"></tfoot>
+  </table>
+  </div>
+</div>
+
+<script>
+const CBK_BASE = 3.5;
+const facilities = [
+  { name:'تورق — الانشاءات الشرقية', loans:[
+    {p:4479158.559919, m:0.75},{p:4755760.541982, m:0.75},{p:2862521.405542, m:0.75},
+    {p:10000000, m:0.75},{p:10000000, m:0.75},{p:6000000, m:1.50},{p:3750000, m:1.50}
+  ]},
+  { name:'تورق — العصيمي', loans:[
+    {p:20426007.477461, m:0.75},{p:4720335.993689, m:0.75},{p:8062277.74485, m:0.75}
+  ]},
+  { name:'إجارة — جزيرة وربة', loans:[
+    {p:27450000, m:0.75},{p:5620000, m:0.75},{p:5325000, m:0.75}
+  ]},
+  { name:'بنك الخليج — الانشاءات الشرقية', loans:[
+    {p:9704918.057, m:1.00},{p:40000000, m:0.90}
+  ]},
+];
+
+function fmtN(n){
+  const a = Math.abs(n);
+  if (a >= 1000000) return (n/1000000).toFixed(2) + 'M';
+  if (a >= 1000)    return (n/1000).toFixed(1) + 'K';
+  return n.toFixed(0);
+}
+function delta(n){
+  const s = (n >= 0 ? '+' : '') + fmtN(n);
+  const cls = Math.abs(n) < 500 ? 'dz' : n > 0 ? 'dp' : 'dn';
+  const arr = Math.abs(n) < 500 ? '' : n > 0 ? ' ▲' : ' ▼';
+  return `<span class="${cls}">${s}${arr}</span>`;
+}
+function facilityCost(f, cbk){
+  return f.loans.reduce((sum,l)=> sum + l.p*(l.m+cbk)/100, 0);
+}
+
+let cbk = CBK_BASE;
+const MIN = 1.0, MAX = 6.0, STEP = 0.25;
+
+function render(){
+  document.getElementById('cbk-disp').textContent = cbk.toFixed(2) + '%';
+  let totBase = 0, totNew = 0, rows = '';
+  facilities.forEach(f=>{
+    const base = facilityCost(f, CBK_BASE);
+    const curr = facilityCost(f, cbk);
+    totBase += base; totNew += curr;
+    rows += `<tr>
+      <td style="font-weight:500">${f.name}</td>
+      <td>${fmtN(base)}</td>
+      <td style="color:var(--blue-600);font-weight:600">${fmtN(curr)}</td>
+      <td>${delta(curr-base)}</td>
+    </tr>`;
+  });
+  document.getElementById('stbody').innerHTML = rows;
+  const d = totNew - totBase;
+  document.getElementById('stfoot').innerHTML = `<tr>
+    <td>إجمالي المحفظة</td>
+    <td>${fmtN(totBase)}</td>
+    <td style="color:var(--blue-600)">${fmtN(totNew)}</td>
+    <td>${delta(d)}</td>
+  </tr>`;
+}
+document.getElementById('btn-up').onclick   = () => { if (cbk < MAX) { cbk = +(cbk + STEP).toFixed(2); render(); } };
+document.getElementById('btn-down').onclick = () => { if (cbk > MIN) { cbk = +(cbk - STEP).toFixed(2); render(); } };
+render();
+</script>
+</body>
+</html>
