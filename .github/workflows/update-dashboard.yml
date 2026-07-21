@@ -1,0 +1,50 @@
+name: تحديث داشبورد التحصيلات تلقائياً
+
+on:
+  schedule:
+    # يشتغل كل ساعتين (وقت UTC) - عدّل الرقم حسب الحاجة
+    - cron: '0 */2 * * *'
+  workflow_dispatch: {}   # يسمح بتشغيل يدوي من واجهة GitHub لأغراض الاختبار
+
+permissions:
+  contents: write   # مطلوبة عشان الـ Action يقدر يعمل commit للملف المحدَّث
+
+jobs:
+  update-dashboard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: تنزيل نسخة الريبو
+        uses: actions/checkout@v4
+
+      - name: إعداد بايثون
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: تثبيت المكتبات المطلوبة
+        run: |
+          pip install openpyxl pandas google-auth google-api-python-client
+
+      - name: كتابة مفتاح حساب الخدمة من الأسرار
+        run: |
+          echo '${{ secrets.GDRIVE_SERVICE_ACCOUNT_KEY }}' > /tmp/gdrive_key.json
+
+      - name: تشغيل سكريبت التحديث
+        env:
+          GDRIVE_KEY_PATH: /tmp/gdrive_key.json
+          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+          DASHBOARD_PATH: dashboard_collections.html
+          ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+          ALERT_EMAIL_APP_PASSWORD: ${{ secrets.ALERT_EMAIL_APP_PASSWORD }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+          DASHBOARD_YEAR: '2026'
+        run: |
+          python automation/dashboard_pipeline_v2_production.py
+
+      - name: نشر التحديث (commit + push) لو تغيّر أي شيء
+        run: |
+          git config user.name "dashboard-automation-bot"
+          git config user.email "actions@github.com"
+          git add dashboard_collections.html
+          git diff --staged --quiet && echo "لا يوجد تغيير" || git commit -m "تحديث تلقائي لداشبورد التحصيلات $(date +'%Y-%m-%d %H:%M')"
+          git push
