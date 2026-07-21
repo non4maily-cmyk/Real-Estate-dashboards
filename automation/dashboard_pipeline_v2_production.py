@@ -134,7 +134,7 @@ try:
         all_rows.append({
             'p': p_long, 'p_short': PORT_SHORTS.get(p_long, ''),
             'c': str(row[2]) if row[2] else '', 'tn': str(row[10]).strip() if row[10] else '',
-            'cm': col_date.month, 'cy': col_date.year,
+            'cm': col_date.month, 'cy': col_date.year, 'cd': col_date.day,
             'dm': row[15].month if (row[15] and hasattr(row[15], 'month')) else None,
             'dy': row[15].year if (row[15] and hasattr(row[15], 'year')) else None,
             'm': method, 't': str(row[5]).strip() if row[5] else '',
@@ -366,10 +366,37 @@ try:
     # ============================================================
     # 6) الاستبدال الجراحي في HTML
     # ============================================================
-    print("=== الاستبدال في HTML ===")
+    print("=== تحديث التسمية الديناميكية للشهر (قسم 14) ===")
     with open(DASHBOARD_PATH, 'r', encoding='utf-8') as f:
         html_content = f.read()
 
+    AR_MONTHS_FULL = {1:'يناير',2:'فبراير',3:'مارس',4:'أبريل',5:'مايو',6:'يونيو',
+                       7:'يوليو',8:'أغسطس',9:'سبتمبر',10:'أكتوبر',11:'نوفمبر',12:'ديسمبر'}
+
+    mn_match = re.search(r"const MONTH_NAMES\s*=\s*\{([^}]*)\}", html_content)
+    if not mn_match:
+        fatal("لم يُعثر على متغير MONTH_NAMES في ملف HTML")
+        die_with_alert(ALERT_LOG)
+    old_month_names = {int(k): v for k, v in re.findall(r"(\d+):'([^']*)'", mn_match.group(1))}
+
+    import calendar
+    for m in MONTHS:
+        month_rows = [r for r in all_rows if r['cy'] == YEAR and r['cm'] == m]
+        max_day_in_month = max((r['cd'] for r in month_rows), default=None)
+        if max_day_in_month is None:
+            continue
+        last_day = calendar.monthrange(YEAR, m)[1]
+        if m < max(MONTHS) or max_day_in_month >= last_day:
+            new_label = AR_MONTHS_FULL[m]
+        else:
+            new_label = f"{max_day_in_month} {AR_MONTHS_FULL[m]}"
+        old_label = old_month_names.get(m)
+        if old_label and old_label != new_label:
+            count = html_content.count(old_label)
+            html_content = html_content.replace(old_label, new_label)
+            print(f"  ✅ الشهر {m}: '{old_label}' → '{new_label}' ({count} موضع)")
+
+    print("=== الاستبدال في HTML ===")
     decoder = json.JSONDecoder()
     def replace_json_var(content, var_name, new_obj):
         marker = f'const {var_name} = '
