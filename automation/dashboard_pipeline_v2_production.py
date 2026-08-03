@@ -380,6 +380,55 @@ try:
     old_month_names = {int(k): v for k, v in re.findall(r"(\d+):'([^']*)'", mn_match.group(1))}
 
     import calendar
+
+    # ============================================================
+    # 6.1) فتح شهر جديد تلقائياً في الواجهة — يسد فجوة الخطأ 33 نهائياً
+    #      (المشكلة: getScope() سابقاً + MONTH_NAMES/الأزرار لم تكن تُضاف
+    #       تلقائياً لأي شهر غير موجود أصلاً في الملف — راجع قسم 27.1 v8)
+    # ============================================================
+    NEW_MONTHS_OPENED = sorted(set(MONTHS) - set(old_month_names.keys()))
+    new_month_labels = {}
+    if NEW_MONTHS_OPENED:
+        print(f"  🆕 أشهر جديدة غير موجودة في الواجهة حالياً: {NEW_MONTHS_OPENED}")
+
+        # تحديد التسمية الصحيحة لكل شهر جديد (نفس منطق قسم 14: كامل أو جزئي)
+        for m in NEW_MONTHS_OPENED:
+            month_rows = [r for r in all_rows if r['cy'] == YEAR and r['cm'] == m]
+            max_day_in_month = max((r['cd'] for r in month_rows), default=None)
+            if max_day_in_month is None:
+                new_month_labels[m] = AR_MONTHS_FULL[m]
+                continue
+            last_day = calendar.monthrange(YEAR, m)[1]
+            if m < max(MONTHS) or max_day_in_month >= last_day:
+                new_month_labels[m] = AR_MONTHS_FULL[m]
+            else:
+                new_month_labels[m] = f"{max_day_in_month} {AR_MONTHS_FULL[m]}"
+
+        # إعادة بناء MONTH_NAMES كاملاً: يحافظ على القيم القديمة كما هي،
+        # ويضيف فقط مفاتيح الأشهر الجديدة — لا يمس أي شهر موجود مسبقاً
+        merged_month_names = dict(old_month_names)
+        merged_month_names.update(new_month_labels)
+        mn_body = ','.join(f"{k}:'{merged_month_names[k]}'" for k in sorted(merged_month_names))
+        html_content = (html_content[:mn_match.start()]
+                         + f"const MONTH_NAMES={{{mn_body}}}"
+                         + html_content[mn_match.end():])
+
+        # إضافة زر لكل شهر جديد داخل شريط الفلاتر #month-pills (بترتيب تصاعدي في النهاية)
+        pills_match = re.search(r'(<div class="pills" id="month-pills">.*?)(</div>)', html_content, re.DOTALL)
+        if not pills_match:
+            fatal("لم يُعثر على شريط أزرار الأشهر (#month-pills) في HTML — تعذّر فتح الشهر الجديد تلقائياً")
+        else:
+            new_buttons = ''.join(
+                f'\n      <button class="pill" onclick="toggleMonth({m},this)">{AR_MONTHS_FULL[m]}</button>'
+                for m in NEW_MONTHS_OPENED
+            )
+            html_content = (html_content[:pills_match.end(1)] + new_buttons + '\n    '
+                             + html_content[pills_match.end(1):])
+            print(f"  ✅ أُضيفت تسميات/أزرار الأشهر الجديدة: {new_month_labels}")
+
+        if ALERT_LOG:
+            die_with_alert(ALERT_LOG)
+
     for m in MONTHS:
         month_rows = [r for r in all_rows if r['cy'] == YEAR and r['cm'] == m]
         max_day_in_month = max((r['cd'] for r in month_rows), default=None)
@@ -424,11 +473,31 @@ try:
     if 'const PORTS' not in new_html or 'const SHORTS' not in new_html:
         fatal("const PORTS أو const SHORTS مفقودان من الملف الناتج")
 
-    scope_match = re.search(r"getScope\(\)\{[^}]*return\[([0-9,]+)\]", new_html)
-    if scope_match:
-        scope_nums = [int(x) for x in scope_match.group(1).split(',')]
-        if scope_nums != MONTHS:
-            warn(f"getScope() تُرجع {scope_nums} لكن الأشهر الفعلية {MONTHS} — يحتاج تحديث يدوي (خطأ 33)")
+    # --- إصلاح تلقائي دائم لـ getScope() (خطأ 33) — لا يعتمد على تدخل يدوي بعد الآن ---
+    scope_pattern = r"if\(selMonths\.length===1&&selMonths\[0\]==='all'\)return\[[0-9,]*\];"
+    scope_replacement = ("if(selMonths.length===1&&selMonths[0]==='all')return["
+                          + ','.join(str(m) for m in MONTHS) + "];")
+    new_html, n_scope_fixed = re.subn(scope_pattern, scope_replacement, new_html)
+    if n_scope_fixed == 0:
+        fatal("تعذّر العثور على نمط getScope() المتوقع لإصلاحه تلقائياً — راجع الدالة يدوياً")
+    else:
+        print(f"  ✅ getScope() ضُبطت تلقائياً على الأشهر: {MONTHS}")
+
+    # --- إصلاح دائم لـ getMonthLabel() — تصبح مشتقة من MONTH_NAMES بدل نص شهر مكتوب صراحة ---
+    label_pattern = r"function getMonthLabel\(\)\{[^}]*\}"
+    label_replacement = (
+        "function getMonthLabel(){"
+        "const _k=Object.keys(MONTH_NAMES).map(Number).sort((a,b)=>a-b);"
+        f"if(selMonths.length===1&&selMonths[0]==='all')return MONTH_NAMES[_k[0]]+' — '+MONTH_NAMES[_k[_k.length-1]]+' {YEAR}';"
+        f"if(selMonths.length===1)return MONTH_NAMES[selMonths[0]]+' {YEAR}';"
+        f"return selMonths.map(m=>MONTH_NAMES[m]).join(' + ')+' {YEAR}';"
+        "}"
+    )
+    new_html, n_label_fixed = re.subn(label_pattern, label_replacement, new_html)
+    if n_label_fixed == 0:
+        fatal("تعذّر العثور على دالة getMonthLabel() لإصلاحها تلقائياً — راجعها يدوياً")
+    else:
+        print("  ✅ getMonthLabel() أصبحت ديناميكية بالكامل (لا نص شهر مكتوب صراحة بعد الآن)")
 
     if ALERT_LOG:
         die_with_alert(ALERT_LOG)
@@ -450,6 +519,18 @@ try:
         f.write(new_html)
 
     print("\n✅✅✅ نجح التحديث بالكامل")
+
+    if NEW_MONTHS_OPENED:
+        send_alert_email(
+            subject=f"🆕 تم فتح شهر جديد تلقائياً في داشبورد التحصيلات ({len(NEW_MONTHS_OPENED)})",
+            body_lines=(
+                ["تم اكتشاف وفتح شهر/أشهر جديدة تلقائياً بدون أي تدخل يدوي:", ""]
+                + [f"  - الشهر {m}: التسمية '{new_month_labels.get(m, '')}'" for m in NEW_MONTHS_OPENED]
+                + ["", "تم تلقائياً: إضافة الزر + تحديث MONTH_NAMES + ضبط getScope() + getMonthLabel().",
+                   "يُنصح بمراجعة الداشبورد بصرياً مرة واحدة للتأكد."]
+            ),
+            to_addr=EMAIL_TO, from_addr=EMAIL_FROM, app_password=EMAIL_APP_PASS
+        )
 
     if WARNING_LOG:
         send_alert_email(
