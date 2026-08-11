@@ -8,7 +8,7 @@ on:
 
 permissions:
   contents: write   # مطلوبة عشان الـ Action يقدر يعمل commit للملف المحدَّث
-
+  pages: write
 jobs:
   update-dashboard:
     runs-on: ubuntu-latest
@@ -41,10 +41,17 @@ jobs:
         run: |
           python automation/dashboard_pipeline_v2_production.py
 
-      - name: نشر التحديث (commit + push) لو تغيّر أي شيء
+      - name: نشر التحديث (commit + push) لو فيه أي تغيير
         run: |
           git config user.name "dashboard-automation-bot"
           git config user.email "actions@github.com"
           git add dashboard_collections.html
           git diff --staged --quiet && echo "لا يوجد تغيير" || git commit -m "تحديث تلقائي لداشبورد التحصيلات $(date +'%Y-%m-%d %H:%M')"
           git push
+
+      - name: تفعيل نشر GitHub Pages يدوياً (تجاوز قيد GITHUB_TOKEN)
+        run: |
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/pages/builds
