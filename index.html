@@ -415,7 +415,8 @@ const LINKS = {
   bonds:       "https://non4maily-cmyk.github.io/Real-Estate-dashboards/bond_dashboard",
   lulu:        "https://non4maily-cmyk.github.io/Real-Estate-dashboards/%D8%A7%D8%B3%D9%87%D9%85%20%D8%A7%D9%84%D9%84%D9%88%D9%84%D9%88%20%D9%87%D8%A7%D9%8A%D8%A8%D8%B1.pdf",
   properties:  "https://non4maily-cmyk.github.io/Real-Estate-dashboards/dashboard_properties",
-  loans:       "https://non4maily-cmyk.github.io/Real-Estate-dashboards/loan_dashboard.html"
+  loans:       "https://non4maily-cmyk.github.io/Real-Estate-dashboards/loan_dashboard.html",
+  receivables: "https://non4maily-cmyk.github.io/Real-Estate-dashboards/dashboard_lessee_receivables.html"
 };
 
 // ══ الفترة الزمنية الديناميكية (يناير → الشهر الحالي) ══
@@ -515,6 +516,13 @@ function buildFullCards() {
       desc: "تحليل تفصيلي للتحصيلات والخدمات لجميع المحافظ — يشمل طرق الدفع، الإعفاءات، الشيكات المؤجلة، ونسبة الإنجاز مقارنةً بالإيرادات المستحقة.",
       status: "تحصيلات 2026", dotClass: "green", statusLabel: "محدّث",
       url: LINKS.collections, label: "داشبورد التحصيلات"
+    },
+    {
+      iconClass: "amber", icon: "ti-report-money",
+      title: "داشبورد تحليل ذمم المستأجرين",
+      desc: "تحليل تفصيلي لذمم المستأجرين عبر جميع المحافظ — يشمل أعمار الذمم، المتأخرات، وحالة السداد لكل مستأجر.",
+      status: "2026", dotClass: "green", statusLabel: "محدّث",
+      url: LINKS.receivables, label: "داشبورد تحليل ذمم المستأجرين"
     },
     {
       iconClass: "blue", icon: "ti-file-text",
